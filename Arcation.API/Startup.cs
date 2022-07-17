@@ -84,7 +84,7 @@ namespace Arcation.API
             }
 
             app.UseHttpsRedirection();
-            app.UseCors();
+            app.UseCors(c => c.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
             app.UseRouting();
 
             // to make wwwroot folder is static:
