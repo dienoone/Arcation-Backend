@@ -286,7 +286,7 @@ namespace Arcation.API.Controllers
                     }
                 }
 
-                IEnumerable<Period> periods = await _unitOfWork.Periods.FindAllAsync(e => e.BandLocationId == bandLocationId && !e.IsDeleted && !e.State);
+                IEnumerable<Period> periods = await _unitOfWork.Periods.FindAllAsync(e => e.BandLocationId == bandLocationId && !e.IsDeleted && e.State);
 
                 AddLeaderPeriod addLeaderPeriod = new AddLeaderPeriod 
                 {

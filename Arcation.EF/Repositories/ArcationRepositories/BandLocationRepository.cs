@@ -27,7 +27,10 @@ namespace Arcation.EF.Repositories.ArcationRepositories
         {
             return await _context.BandLocations
                 .Include(e => e.Bills)
-                .Include(e => e.Extracts).Include(e => e.Incomes).Include(e => e.Periods).Include(e => e.Periods)
+                .Include(e => e.BLWesteds)
+                .Include(e => e.Incomes)
+                .Include(e => e.Periods)
+                .Include(e => e.Extracts)
                 .Include(c => c.BandLocationLeaders).ThenInclude(a => a.BandLocationLeaderPeriods)
                 .Include(c => c.BandLocationLeaders).ThenInclude(a => a.BandLocationLeaderPeriods).ThenInclude(e => e.Transactions)
                 .Include(c => c.BandLocationLeaders).ThenInclude(a => a.BandLocationLeaderPeriods).ThenInclude(e => e.Westeds)
@@ -41,10 +44,11 @@ namespace Arcation.EF.Repositories.ArcationRepositories
             return await _context.BandLocations
                 .Include(e => e.Location).ThenInclude(e => e.Company)
                 .Include(e => e.Band)
-                .Include(e => e.Extracts)
+                .Include(e => e.Bills)
                 .Include(e => e.BLWesteds)
                 .Include(e => e.Incomes)
-                .Include(e => e.BLWesteds)
+                .Include(e => e.Periods)
+                .Include(e => e.Extracts)
                 .Include(e => e.BandLocationLeaders).ThenInclude(e => e.Leader)
                 .Include(e => e.BandLocationLeaders).ThenInclude(e => e.BandLocationLeaderPeriods).ThenInclude(e => e.Transactions)
                 .Include(e => e.BandLocationLeaders).ThenInclude(e => e.BandLocationLeaderPeriods).ThenInclude(e => e.Westeds)

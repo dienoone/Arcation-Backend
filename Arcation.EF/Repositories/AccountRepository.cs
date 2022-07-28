@@ -245,7 +245,7 @@ namespace Arcation.EF.Repositories
             }
 
             // Create New User 
-            var user = new ApplicationUser { UserName = model.UserName, BusinessId = model.BusinessId , FirstName = model.FristName, LastName = model.LastName, Email = model.UserName, IsActive = true};
+            var user = new ApplicationUser { UserName = model.UserName, BusinessId = model.BusinessId , FirstName = model.LeaderName, Email = model.UserName, IsActive = true};
 
             var result = await _userManager.CreateAsync(user, model.Password);
 

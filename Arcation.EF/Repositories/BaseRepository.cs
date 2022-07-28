@@ -43,7 +43,7 @@ namespace Arcation.EF.Repositories
             return await query.SingleOrDefaultAsync(criteria);
         }
 
-        public virtual async Task<IEnumerable<T>> FindAllAsync(Expression<Func<T, bool>> criteria, string[] includes = null, Expression<Func<T, object>> orderBy = null, string orderByDirection = "ASC")
+        public virtual async Task<IEnumerable<T>> FindAllAsync(Expression<Func<T, bool>> criteria, string[] includes = null, Expression<Func<T, object>> orderBy = null, string orderByDirection = "DESC")
         {
             IQueryable<T> query = _context.Set<T>().Where(criteria);
             if (includes != null)

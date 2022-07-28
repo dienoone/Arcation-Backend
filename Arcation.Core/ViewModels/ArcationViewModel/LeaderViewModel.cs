@@ -13,9 +13,7 @@ namespace Arcation.Core.ViewModels.ArcationViewModel
     public class AddLeaderDto
     {
         [Required]
-        public string FristName { get; set; }
-        [Required]
-        public string LastName { get; set; }
+        public string LeaderName { get; set; }
 
         [Required]
         [StringLength(50)]

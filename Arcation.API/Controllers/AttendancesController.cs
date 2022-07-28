@@ -34,7 +34,7 @@ namespace Arcation.API.Controllers
         {
             if (bandLocationLeaderPeriodId != null)
             {
-                IEnumerable<Attendance> attendances = await _unitOfWork.Attendances.FindAllAsync(e => e.BandLocationLeaderPeriodId == bandLocationLeaderPeriodId, null, e => e.Date);
+                IEnumerable<Attendance> attendances = await _unitOfWork.Attendances.FindAllAsync(e => e.BandLocationLeaderPeriodId == bandLocationLeaderPeriodId, null, e => e.ended);
                 if (attendances != null)
                 {
                     return Ok(_mapper.Map<IEnumerable<AllAttendances>>(attendances));
@@ -67,12 +67,15 @@ namespace Arcation.API.Controllers
             if (bandLocationLeaderPeriodId != null)
             {
                 var bandLocationLeaderPeriod = await _unitOfWork.BandLocationLeaderPeriods.FindAsync(e => e.Id == bandLocationLeaderPeriodId && !e.IsDeleted && e.BusinessId == HttpContext.GetBusinessId());
-                if (bandLocationLeaderPeriod != null)
+                var attendance = await _unitOfWork.Attendances.FindAsync(e => e.BandLocationLeaderPeriodId == bandLocationLeaderPeriodId && !e.ended && e.BusinessId == HttpContext.GetBusinessId());
+                if (bandLocationLeaderPeriod != null && attendance == null)
                 {
                     Attendance newAttendance = new()
                     {
                         BandLocationLeaderPeriodId = bandLocationLeaderPeriod.Id,
                         BorrowValue = 0,
+                        AttendanceState = false,
+                        ended = false,
                         Date = DateTime.UtcNow,
                         WorkingHours = 0,
                         IsDeleted = false,

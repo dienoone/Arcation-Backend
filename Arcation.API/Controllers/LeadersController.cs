@@ -60,7 +60,7 @@ namespace Arcation.API.Controllers
                     Leader leader = new Leader
                     {
                         Id = result.Message,
-                        Name = model.FristName + " " + model.LastName,
+                        Name = model.LeaderName,
                         Phone = model.PhoneNumber,
                         Salary = model.Salary,
                         UserName = model.UserName,
@@ -124,11 +124,11 @@ namespace Arcation.API.Controllers
 
         // api/leaders/{id} => Update Leader
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateLeader([FromRoute] string? id, [FromForm] UpdateLeaderDto dto)
+        public async Task<IActionResult> UpdateLeader([FromRoute] string id, [FromForm] UpdateLeaderDto dto)
         {
             if (ModelState.IsValid)
             {
-                if (id != null)
+                if (!string.IsNullOrEmpty(id) && !string.IsNullOrWhiteSpace(id))
                 {
                     var user = await _userManager.FindByIdAsync(id);
                     if (user != null)
@@ -137,7 +137,7 @@ namespace Arcation.API.Controllers
                         if (leader != null)
                         {
                             // Update Leaders Tabel:
-                            leader.Name = dto.FristName + " " + dto.LastName;
+                            leader.Name = dto.LeaderName;
                             leader.Passwrod = dto.Password;
                             leader.Phone = dto.PhoneNumber;
                             leader.Salary = dto.Salary;
@@ -182,8 +182,7 @@ namespace Arcation.API.Controllers
                             #endregion
 
                             // Update Users Tabels:
-                            user.FirstName = dto.FristName;
-                            user.LastName = dto.LastName;
+                            user.FirstName = dto.LeaderName;
                             user.PhoneNumber = dto.PhoneNumber;
 
                             // Reset Password:
@@ -213,7 +212,7 @@ namespace Arcation.API.Controllers
 
         // api/leaders/{id} => delete leader
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteLeader([FromRoute] string? id)
+        public async Task<IActionResult> DeleteLeader([FromRoute] string id)
         {
             if (id != null)
             {

@@ -33,7 +33,7 @@ namespace Arcation.API.Controllers
         [HttpGet("{bandLocationId}")]
         public async Task<IActionResult> GetAll([FromRoute] int? bandLocationId)
         {
-            IEnumerable<Period> entities = await _unitOfWork.Periods.FindAllAsync(e => e.BusinessId == HttpContext.GetBusinessId() && !e.IsDeleted);
+            IEnumerable<Period> entities = await _unitOfWork.Periods.FindAllAsync(e => e.BandLocationId == bandLocationId && e.BusinessId == HttpContext.GetBusinessId() && !e.IsDeleted);
             if (entities != null)
             {
                 return Ok(_mapper.Map<IEnumerable<AllPeriodDto>>(entities));
