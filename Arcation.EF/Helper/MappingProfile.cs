@@ -207,6 +207,7 @@ namespace Arcation.EF.Helper
             CreateMap<BandLocationLeaderPeriodEmployeePeriod, SubPeriodDetailDto>()
                .ForMember(dest => dest.LeaderName, src => src.MapFrom(e => e.BandLocationLeaderPeriodEmployee.BandLocationLeaderPeriod.BandLocationLeader.Leader.Name))
                .ForMember(dest => dest.BandName, src => src.MapFrom(e => e.BandLocationLeaderPeriodEmployee.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.Band.BandName))
+               .ForMember(dest => dest.MainPeriodId, src => src.MapFrom(e => e.BandLocationLeaderPeriodEmployee.BandLocationLeaderPeriod.Id))
                .ForMember(dest => dest.BandLocationLeaderPeriodEmployeePeriodId, src => src.MapFrom(e => e.Id))
                .ForMember(dest => dest.EmployeeType, src => src.MapFrom(e => e.BandLocationLeaderPeriodEmployee.Employee.Type.Type))
                .ForMember(dest => dest.EmployeeSalary, src => src.MapFrom(e => e.EmployeeSalary))

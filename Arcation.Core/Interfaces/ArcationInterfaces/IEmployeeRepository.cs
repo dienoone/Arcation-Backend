@@ -9,8 +9,8 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
 {
     public interface IEmployeeRepository : IBaseRepository<Employee>
     {
-        Task<IEnumerable<Employee>> GetAllIncludePeriods(string businessId);
-        Task<Employee> GetEmployeeIncludePeriods(int? Id, string businessId);
+        Task<IEnumerable<Employee>> GetAllIncludeTypes(string businessId);
+        Task<Employee> GetEmployeeIncludeTypes(int? Id, string businessId);
         Task<Employee> GetEmployeePeriods(int? Id, string businessId);
     }
 }

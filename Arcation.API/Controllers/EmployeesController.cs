@@ -42,7 +42,7 @@ namespace Arcation.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            IEnumerable<Employee> entities = await _unitOfWork.Employees.GetAllIncludePeriods(HttpContext.GetBusinessId());
+            IEnumerable<Employee> entities = await _unitOfWork.Employees.GetAllIncludeTypes(HttpContext.GetBusinessId());
             if (entities != null)
             {
                 return Ok(_mapper.Map<IEnumerable<EmployeePageDto>>(entities));
@@ -56,7 +56,7 @@ namespace Arcation.API.Controllers
         {
             if (Id != null)
             {
-                Employee entity = await _unitOfWork.Employees.GetEmployeeIncludePeriods(Id, HttpContext.GetBusinessId());
+                Employee entity = await _unitOfWork.Employees.GetEmployeeIncludeTypes(Id, HttpContext.GetBusinessId());
                 if (entity != null)
                 {
                     return Ok(_mapper.Map<EmployeeDetailsDto>(entity));
@@ -285,7 +285,7 @@ namespace Arcation.API.Controllers
                     {
                         if (await _unitOfWork.Complete())
                         {
-                            var getEmployee = await _unitOfWork.Employees.GetEmployeeIncludePeriods(newEmployee.Id, HttpContext.GetBusinessId());
+                            var getEmployee = await _unitOfWork.Employees.GetEmployeeIncludeTypes(newEmployee.Id, HttpContext.GetBusinessId());
                             return CreatedAtRoute("GetEmployee", new { controller = "Employees", id = newEmployee.Id }, _mapper.Map<EmployeeDetailsDto>(getEmployee));
                         }
                         return BadRequest();
@@ -356,7 +356,7 @@ namespace Arcation.API.Controllers
 
                             if (await _unitOfWork.Complete())
                             {
-                                var getEmployee = await _unitOfWork.Employees.GetEmployeeIncludePeriods(queryEmployee.Id, HttpContext.GetBusinessId());
+                                var getEmployee = await _unitOfWork.Employees.GetEmployeeIncludeTypes(queryEmployee.Id, HttpContext.GetBusinessId());
                                 return Ok(_mapper.Map<EmployeeDetailsDto>(getEmployee));
                             }
                             return BadRequest();

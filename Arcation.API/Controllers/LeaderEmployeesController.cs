@@ -58,9 +58,9 @@ namespace Arcation.API.Controllers
             return BadRequest();
         }
 
-        // api/leaderEmployees/UpdateMainPeriod/{bandLocationLeaderPeriodEmployeeId}
+        // api/leaderEmployees/updateMainPeriod/{bandLocationLeaderPeriodEmployeeId}
         [HttpPut("UpdateMainPeriod/{bandLocationLeaderPeriodEmployeeId}")]
-        public async Task<IActionResult> UpdateMainPeriod([FromRoute] int? bandLocationLeaderPeriodEmployeeId,[FromBody] UpdateMainPeriodForEmployee dto)
+        public async Task<IActionResult> UpdateMainPeriod([FromRoute] int? bandLocationLeaderPeriodEmployeeId, [FromBody] UpdateMainPeriodForEmployee dto)
         {
             if(ModelState.IsValid && bandLocationLeaderPeriodEmployeeId != null)
             {
@@ -68,18 +68,23 @@ namespace Arcation.API.Controllers
                 if(entity != null)
                 {
                     entity.State = dto.EmployeeState;
-                    if (!dto.EmployeeState)
+                    if (dto.EmployeeState)
+                    {
+                        entity.EndingDate = null;
+                    }
+                    else 
                     {
                         entity.EndingDate = DateTime.UtcNow;
                     }
-
-                    if(await _unitOfWork.Complete())
+                    await _unitOfWork.Complete();
+                    var result = await _unitOfWork.BandLocationLeaderPeriodEmployees.GetSinglePeriodEmployeeDataAsync(entity.BandLocationLeaderPeriodId, entity.Id, HttpContext.GetBusinessId());
+                    if (result != null)
                     {
-                        return Ok(dto);
+                        return Ok(_mapper.Map<BandLocationLeaderPeriodEmployeeDto>(entity));
                     }
-                    return BadRequest();
+                    return NotFound();
                 }
-                return BadRequest();
+                return NotFound();
             }
             return BadRequest();
         }
@@ -137,6 +142,24 @@ namespace Arcation.API.Controllers
             return BadRequest();
         }
 
+        // api/leaderEmployees/deleteEmployee/{bandLocationLeaderPeriodEmployeeId}
+        [HttpDelete("DeleteEmployee/{bandLocationLeaderPeriodEmployeeId}")]
+        public async Task<IActionResult> DeleteBandLocationLeaderPeriodEmployee(int? bandLocationLeaderPeriodEmployeeId) 
+        {
+            if (bandLocationLeaderPeriodEmployeeId != null) 
+            {
+                var employee = await _unitOfWork.BandLocationLeaderPeriodEmployees.FindAsync(e => e.Id == bandLocationLeaderPeriodEmployeeId && e.BusinessId == HttpContext.GetBusinessId());
+                if (employee != null) 
+                {
+                    employee.IsDeleted = true;
+                    await _unitOfWork.Complete();
+                    return NoContent();
+                }
+                return NotFound();
+            }
+            return NotFound();
+        }
+
         // api/leaderEmployees/subPeriod/{bandLocationLeaderPeriodEmployeePeriodId}
         [HttpGet("subPeriod/{bandLocationLeaderPeriodEmployeePeriodId}")]
         public async Task<IActionResult> GetSubPeriod([FromRoute]int? bandLocationLeaderPeriodEmployeePeriodId)
@@ -157,18 +180,20 @@ namespace Arcation.API.Controllers
 
         // Leader Work
         // api/leaderEmployees/finishSubPeriod/{bandLocationLeaderPeriodEmployeePeriodId}
-        [HttpGet("finishSubPeriod/{bandLocationLeaderPeriodEmployeePeriodId}")]
-        public async Task<IActionResult> FinishSubPeriod([FromRoute] int? bandLocationLeaderPeriodEmployeePeriodId)
+        [HttpPost("finishSubPeriod/{bandLocationLeaderPeriodEmployeePeriodId}")]
+        public async Task<IActionResult> FinishSubPeriod([FromRoute] int? bandLocationLeaderPeriodEmployeePeriodId, [FromBody] FinishSupPeriodLeaderDto dto)
         {
-            if(bandLocationLeaderPeriodEmployeePeriodId != null)
+            if (ModelState.IsValid) 
             {
-                BandLocationLeaderPeriodEmployeePeriod bandLocationLeaderPeriodEmployeePeriod = await _unitOfWork.BandLocationLeaderPeriodEmployeePeriods.FindAsync(e => e.Id == bandLocationLeaderPeriodEmployeePeriodId);
-                if(bandLocationLeaderPeriodEmployeePeriod != null)
+                if (bandLocationLeaderPeriodEmployeePeriodId != null)
                 {
-                    bandLocationLeaderPeriodEmployeePeriod.State = false;
-                    if(await _unitOfWork.Complete())
+                    BandLocationLeaderPeriodEmployeePeriod bandLocationLeaderPeriodEmployeePeriod = await _unitOfWork.BandLocationLeaderPeriodEmployeePeriods.FindAsync(e => e.Id == bandLocationLeaderPeriodEmployeePeriodId);
+                    if (bandLocationLeaderPeriodEmployeePeriod != null)
                     {
-                        BandLocationLeaderPeriodEmployeePeriod subPeriod = await _unitOfWork.BandLocationLeaderPeriodEmployeePeriods.GetSubPeriodIncludeAttendace(bandLocationLeaderPeriodEmployeePeriod.Id, HttpContext.GetBusinessId());
+                        bandLocationLeaderPeriodEmployeePeriod.State = dto.EmployeeState;
+                        await _unitOfWork.Complete();
+
+                        BandLocationLeaderPeriodEmployeePeriod subPeriod = await _unitOfWork.BandLocationLeaderPeriodEmployeePeriods.GetSubPeriodIncludeAttendace(bandLocationLeaderPeriodEmployeePeriodId, HttpContext.GetBusinessId());
                         if (subPeriod != null)
                         {
                             SubPeriodDetailDto subPeriodDetailDto = _mapper.Map<SubPeriodDetailDto>(subPeriod);
@@ -176,11 +201,13 @@ namespace Arcation.API.Controllers
                             return Ok(subPeriodDetailDto);
                         }
                         return NotFound();
+
                     }
+                    return NotFound();
                 }
                 return NotFound();
             }
-            return NotFound();
+            return BadRequest(ModelState);
         }
 
         // api/leaderEmployees/finishSubPeriod/{bandLocationLeaderPeriodEmployeePeriodId}
@@ -193,24 +220,23 @@ namespace Arcation.API.Controllers
                 if(entity != null)
                 {
                     entity.EmployeeSalary = dto.EmployeeSalary;
-                    if(await _unitOfWork.Complete())
+                    await _unitOfWork.Complete();
+
+                    BandLocationLeaderPeriodEmployeePeriod subPeriod = await _unitOfWork.BandLocationLeaderPeriodEmployeePeriods.GetSubPeriodIncludeAttendace(bandLocationLeaderPeriodEmployeePeriodId, HttpContext.GetBusinessId());
+                    if (subPeriod != null)
                     {
-                        BandLocationLeaderPeriodEmployeePeriod subPeriod = await _unitOfWork.BandLocationLeaderPeriodEmployeePeriods.GetSubPeriodIncludeAttendace(bandLocationLeaderPeriodEmployeePeriodId, HttpContext.GetBusinessId());
-                        if (subPeriod != null)
-                        {
-                            SubPeriodDetailDto subPeriodDetailDto = _mapper.Map<SubPeriodDetailDto>(subPeriod);
-                            subPeriodDetailDto.Remainder = subPeriodDetailDto.TotalSalary - subPeriodDetailDto.TotalPaied - subPeriodDetailDto.TotalBorrow;
-                            return Ok(subPeriodDetailDto);
-                        }
-                        return BadRequest();
+                        SubPeriodDetailDto subPeriodDetailDto = _mapper.Map<SubPeriodDetailDto>(subPeriod);
+                        subPeriodDetailDto.Remainder = subPeriodDetailDto.TotalSalary - subPeriodDetailDto.TotalPaied - subPeriodDetailDto.TotalBorrow;
+                        return Ok(subPeriodDetailDto);
                     }
+                    return BadRequest();
                 }
                 return BadRequest();
             }
             return BadRequest();
         }
 
-        // api/leaderEmployees/finishSubPeriod/{bandLocationLeaderPeriodEmployeePeriodId}
+        // api/leaderEmployees/deleteSubPeriod/{bandLocationLeaderPeriodEmployeePeriodId}
         [HttpDelete("deleteSubPeriod/{bandLocationLeaderPeriodEmployeePeriodId}")]
         public async Task<IActionResult> DeleteSubPeriod([FromRoute] int? bandLocationLeaderPeriodEmployeePeriodId)
         {
@@ -229,6 +255,30 @@ namespace Arcation.API.Controllers
                 return BadRequest();
             }
             return BadRequest();
+        }
+
+        // api/leaderEmployees/getEmployeesForAssign/{bandLocationLeaderPeriodId}
+        [HttpGet("getEmployeesForAssign/{bandLocationLeaderPeriodId}")]
+        public async Task<IActionResult> GetEmployeesForAssign([FromRoute] int? bandLocationLeaderPeriodId) 
+        {
+            if (bandLocationLeaderPeriodId != null) 
+            {
+                var employees = await _unitOfWork.Employees.GetAllIncludeTypes(HttpContext.GetBusinessId());
+                var periodEmployees = await _unitOfWork.BandLocationLeaderPeriodEmployees.FindAllAsync(e => e.BusinessId == HttpContext.GetBusinessId() && e.BandLocationLeaderPeriodId == bandLocationLeaderPeriodId && !e.IsDeleted);
+                List<Employee> filterEmployees = new();
+
+                foreach(Employee emp in employees) 
+                {
+                    var exist = periodEmployees.FirstOrDefault(e => e.EmployeeId == emp.Id);
+                    if(exist == null) 
+                    {
+                        filterEmployees.Add(emp);
+                    }
+                }
+
+                return Ok(_mapper.Map<IEnumerable<EmployeePageDto>>(filterEmployees));
+            }
+            return NotFound();
         }
 
     }

@@ -14,6 +14,7 @@ namespace Arcation.Core.ViewModels.ArcationViewModel
         public int EmployeeId { get; set; }
         public string EmployeeName { get; set; }
         public string EmployeeType { get; set; }
+        public bool State { get; set; }
         public IEnumerable<PeriodsList> Periods { get; set; }
 
     }

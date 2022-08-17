@@ -97,6 +97,7 @@ namespace Arcation.Core.ViewModels.ArcationViewModel
     public class SubPeriodDetailDto
     {
         public int BandLocationLeaderPeriodEmployeePeriodId { get; set; }
+        public int MainPeriodId { get; set; }
         public string LeaderName { get; set; }
         public string BandName { get; set; }
         public string EmployeeType { get; set; }
@@ -121,6 +122,12 @@ namespace Arcation.Core.ViewModels.ArcationViewModel
     {
         [Required]
         public double PayiedValue { get; set; }
+    }
+
+    public class FinishSupPeriodLeaderDto
+    {
+        [Required]
+        public bool EmployeeState { get; set; }
     }
 
 }

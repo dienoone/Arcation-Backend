@@ -24,6 +24,7 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .Include(e => e.BandLocationLeaderPeriodEmployee.BandLocationLeaderPeriod.BandLocationLeader.Leader)
                 .Include(e => e.BandLocationLeaderPeriodEmployee.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.Band)
                 .Include(e => e.BandLocationLeaderPeriodEmployee.Employee.Type)
+                .Include(e => e.BandLocationLeaderPeriodEmployee.BandLocationLeaderPeriod)
                 .Include(e => e.BandLocationLeaderPeriodEmployeePeriodAttendances.Where(e => !e.IsDeleted))
                 .Where(e => e.Id == bandLocationLeaderPeriodEmployeePeriodId && e.BusinessId == BusinessId && !e.IsDeleted)
                 .FirstOrDefaultAsync();
