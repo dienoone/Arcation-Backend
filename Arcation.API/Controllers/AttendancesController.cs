@@ -66,8 +66,8 @@ namespace Arcation.API.Controllers
         {
             if (bandLocationLeaderPeriodId != null)
             {
-                var bandLocationLeaderPeriod = await _unitOfWork.BandLocationLeaderPeriods.FindAsync(e => e.Id == bandLocationLeaderPeriodId && !e.IsDeleted && e.BusinessId == HttpContext.GetBusinessId());
-                var attendance = await _unitOfWork.Attendances.FindAsync(e => e.BandLocationLeaderPeriodId == bandLocationLeaderPeriodId && !e.ended && e.BusinessId == HttpContext.GetBusinessId());
+                var bandLocationLeaderPeriod = await _unitOfWork.BandLocationLeaderPeriods.FindAsync(e => e.Id == bandLocationLeaderPeriodId && !e.IsDeleted && e.BusinessId == HttpContext.GetBusinessId());             
+                var attendance = await _unitOfWork.Attendances.FindAsync(e => e.BandLocationLeaderPeriodId == bandLocationLeaderPeriodId && !e.ended && e.BusinessId == HttpContext.GetBusinessId() && e.BandLocationLeaderPeriod.PeriodId == bandLocationLeaderPeriod.PeriodId);
                 if (bandLocationLeaderPeriod != null && attendance == null)
                 {
                     Attendance newAttendance = new()

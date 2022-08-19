@@ -105,7 +105,7 @@ namespace Arcation.API.Controllers
                         if (isExist == null)
                         {
                             Employee employee = await _unitOfWork.Employees.FindAsync(e => e.Id == employeeId);
-                            if(employee != null)
+                            if (employee != null)
                             {
                                 BandLocationLeaderPeriodEmployee bandLocationLeaderPeriodEmployee = new BandLocationLeaderPeriodEmployee
                                 {
@@ -122,6 +122,10 @@ namespace Arcation.API.Controllers
                                 };
                                 bandLocationLeaderPeriodEmployees.Add(bandLocationLeaderPeriodEmployee);
                             }
+                        }
+                        else 
+                        {
+                            isExist.State = true;
                         }
                     }
                     

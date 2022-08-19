@@ -27,7 +27,7 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .Include(e => e.Attendances.Where(e => !e.IsDeleted))
                 .Include(c => c.BandLocationLeaderPeriodEmployees.Where(c => !c.IsDeleted)).ThenInclude(c => c.Employee).ThenInclude(z => z.Type)
                 .Include(c => c.BandLocationLeaderPeriodEmployees.Where(c => !c.IsDeleted))
-                .ThenInclude(c => c.BandLocationLeaderPeriodEmployeePeriods).ThenInclude(a => a.BandLocationLeaderPeriodEmployeePeriodAttendances)
+                .ThenInclude(c => c.BandLocationLeaderPeriodEmployeePeriods.Where(c => !c.IsDeleted)).ThenInclude(a => a.BandLocationLeaderPeriodEmployeePeriodAttendances.Where(c => !c.IsDeleted))
                 .Where(e => !e.IsDeleted && e.BusinessId == businessId && e.Id == bandLocationLeaderPeriodId).FirstOrDefaultAsync();
         }
 
