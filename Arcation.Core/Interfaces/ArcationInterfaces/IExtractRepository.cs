@@ -13,5 +13,8 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
         Task<IEnumerable<Extract>> GetExtractsAsync(int? bandLocationId, string businessId);
         Task<IEnumerable<Extract>> SearchExtractAsync(int? bandLocationId, string name, string businessId);
 
+
+        double GetBandLocationInnerReport(int? bandLocationId, string busiessId);
+
     }
 }

@@ -19,5 +19,8 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
         Task<IEnumerable<EmployeeType>> GetEmployeeTypesCompany(int companyID);
         Task<IEnumerable<EmployeeType>> GetEmployeeTypesLocation(int locationID);
         Task<IEnumerable<EmployeeType>> GetEmployeeTypesBand(int bandId);
+
+
+        int GetBandLocationInnerReport(int? bandLocationId, int? typeId, string businessId);
     }
 }

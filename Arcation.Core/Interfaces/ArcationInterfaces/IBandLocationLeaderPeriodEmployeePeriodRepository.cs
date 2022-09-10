@@ -16,5 +16,7 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
         double GetTotalCompanySalary(int? companyId);
         double GetTotalBandSalary(int? bandId);
         double GetTotalLocationSalary(int? locationId);
+
+        double GetBandLocationInnerReport(int? bandLocationId, string businessId);
     }
 }

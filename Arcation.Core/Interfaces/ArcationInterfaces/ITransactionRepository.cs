@@ -13,5 +13,8 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
         double GetTotalCompany(int? companyId);
         double GetTotalBand(int? bandId);
         double GetTotalLocation(int? locationId);
+
+
+        double GetBandLocationInnerReport(int? bandLocationId, string businessId);
     }
 }

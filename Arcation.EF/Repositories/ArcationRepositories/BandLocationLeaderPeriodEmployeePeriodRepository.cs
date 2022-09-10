@@ -72,5 +72,12 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .Sum(e => e.EmployeeSalary);
         }
 
+        public double GetBandLocationInnerReport(int? bandLocationId, string businessId)
+        {
+            return _context.BandLocationLeaderPeriodEmployeePeriods
+                .Where(e => e.BusinessId == businessId && !e.IsDeleted && e.BandLocationLeaderPeriodEmployee.BandLocationLeaderPeriod.BandLocationLeader.BandLocationId == bandLocationId)
+                .Sum(e => e.PayiedValue);
+        }
+
     }
 }

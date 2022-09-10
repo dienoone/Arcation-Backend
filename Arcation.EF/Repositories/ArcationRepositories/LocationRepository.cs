@@ -26,10 +26,12 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .ThenInclude(b => b.Band).Where(l => l.BusinessId == userID && l.IsDeleted == false && l.CompanyId == companyId).ToListAsync();
         }
 
-        public async Task<Location> GetLocationAsync(string userID, int? companyId, int? Id)
+        public async Task<Location> GetLocation(string BusinessId, int? locationId)
         {
-            return await _context.Locations.Include(l => l.BandLocations.Where(e => e.IsDeleted == false))
-                .ThenInclude(b => b.Band).Where(l => l.BusinessId == userID && l.IsDeleted == false && l.CompanyId == companyId && l.Id == Id).FirstOrDefaultAsync();
+            return await _context.Locations
+                .Include(e => e.BandLocations.Where(e => !e.IsDeleted))
+                .ThenInclude(e => e.Band)
+                .FirstOrDefaultAsync(e => e.Id == locationId && e.BusinessId == BusinessId && !e.IsDeleted);
         }
 
         public async Task<List<Location>> SearchLocationAsync(string userId, int? companyId, string name)

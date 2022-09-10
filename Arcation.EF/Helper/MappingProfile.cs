@@ -22,7 +22,7 @@ namespace Arcation.EF.Helper
             CreateMap<Location, UpdateLocationViewModel>().ReverseMap();
             CreateMap<Location, AddLocationViewModel>().ReverseMap();
             CreateMap<Location, LocationViewModel>()
-                .ForMember(dest => dest.Bands, src => src.MapFrom(src => src.BandLocations.Select(b => new BandLocationDto
+                .ForMember(dest => dest.Bands, src => src.MapFrom(src => src.BandLocations.Where(e => !e.IsDeleted).Select(b => new BandLocationDto
                 {
                     BandLocationId = b.Id,
                     BandId = b.Band.Id,
@@ -276,28 +276,7 @@ namespace Arcation.EF.Helper
                 .ForMember(dest => dest.AttendanceId, src => src.MapFrom(src => src.Id))
                 .ForMember(dest => dest.Date, src => src.MapFrom(src => src.Date))
                 .ForMember(dest => dest.ended, src => src.MapFrom(src => src.ended));
-
-            // InnerReports Controller:
-            CreateMap<BandLocation, BLCompanyReport>() // TotalSalaryOFEmployee & Remainder : 
-                .ForMember(dest => dest.TotalBills, src => src.MapFrom(src => src.Bills.Sum(e => e.BillPrice)))
-                .ForMember(dest => dest.TotalExtracts, src => src.MapFrom(src => src.Extracts.Sum(e => e.TotalPrice)))
-                .ForMember(dest => dest.TotalIncomes, src => src.MapFrom(src => src.Incomes.Sum(e => e.Price)))
-                .ForMember(dest => dest.TotalWested, src => src.MapFrom(src => src.BLWesteds.Sum(e => e.Price) + src.BandLocationLeaders.Sum(e => e.BandLocationLeaderPeriods.Sum(e => e.Westeds.Sum(e => e.Value)))))
-                .ForMember(dest => dest.TotalSalaryOfEmployees, src => src.MapFrom(src => src.BandLocationLeaders.Sum(e => e.BandLocationLeaderPeriods
-                .Sum(e => (e.Attendances.Where(e => e.AttendanceState).Sum(e => e.WorkingHours) * e.LeaderSalary) +
-                (e.BandLocationLeaderPeriodEmployees.Sum(e => e.BandLocationLeaderPeriodEmployeePeriods
-                .Sum(e => e.BandLocationLeaderPeriodEmployeePeriodAttendances.Where(e => e.State).Sum(e => e.WorkingHours) * e.EmployeeSalary)))))));
-
-            CreateMap<BandLocation, BLLeadersReport>()
-                .ForMember(dest => dest.TotalTransictions, src => src.MapFrom(src => src.BandLocationLeaders.Sum(e => e.BandLocationLeaderPeriods.Sum(e => e.Westeds.Sum(e => e.Value)))))
-                .ForMember(dest => dest.TotalPaied, src => src.MapFrom(src => src.BandLocationLeaders.Sum(e => e.BandLocationLeaderPeriods.Sum(e => e.TotalPaied))))
-                .ForMember(dest => dest.TotalSalaryOfLeaders, src => src.MapFrom(src => src.BandLocationLeaders.Sum(e => e.BandLocationLeaderPeriods
-                .Sum(e => (e.Attendances.Where(e => e.AttendanceState).Sum(e => e.WorkingHours) * e.LeaderSalary)))))
-                .ForMember(dest => dest.TotalWesteds, src => src.MapFrom(src => src.BandLocationLeaders.Sum(e => e.BandLocationLeaderPeriods.Sum(e => e.Transactions.Sum(e => e.Value)))));
-
-            CreateMap<BandLocation, EmployeesDetail>()
-                .ForMember(dest => dest.TotalPaied, src => src.MapFrom(src => src.BandLocationLeaders.Sum(e => e.BandLocationLeaderPeriods.Sum(e => e.BandLocationLeaderPeriodEmployees.Sum(e => e.BandLocationLeaderPeriodEmployeePeriods.Sum(e => e.PayiedValue))))))
-                .ForMember(dest => dest.TotalSalaryOfEmployess, src => src.MapFrom(src => src.BandLocationLeaders.Sum(e => e.BandLocationLeaderPeriods.Sum(e => e.BandLocationLeaderPeriodEmployees.Sum(e => e.BandLocationLeaderPeriodEmployeePeriods.Sum(e => e.EmployeeSalary * e.BandLocationLeaderPeriodEmployeePeriodAttendances.Sum(e => e.WorkingHours)))))));
+        
 
             // Reports Controller:
             CreateMap<Company, CompanyReprots>()

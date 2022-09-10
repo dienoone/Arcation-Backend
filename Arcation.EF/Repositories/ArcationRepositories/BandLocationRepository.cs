@@ -20,22 +20,7 @@ namespace Arcation.EF.Repositories.ArcationRepositories
 
         public async Task<List<int>> GetBandsId(int locationId)
         {
-            return await _context.BandLocations.Where(e => e.LocationId == locationId).Select(e => e.BandId).ToListAsync();
-        }
-
-        public async Task<BandLocation> Reports(int? bandLocationId, string BusinessId)
-        {
-            return await _context.BandLocations
-                .Include(e => e.Bills)
-                .Include(e => e.BLWesteds)
-                .Include(e => e.Incomes)
-                .Include(e => e.Periods)
-                .Include(e => e.Extracts).ThenInclude(e => e.ExtractRows)
-                .Include(c => c.BandLocationLeaders).ThenInclude(a => a.BandLocationLeaderPeriods).ThenInclude(e => e.Transactions)
-                .Include(c => c.BandLocationLeaders).ThenInclude(a => a.BandLocationLeaderPeriods).ThenInclude(e => e.Westeds)
-                .Include(c => c.BandLocationLeaders).ThenInclude(a => a.BandLocationLeaderPeriods).ThenInclude(e => e.BandLocationLeaderPeriodEmployees).ThenInclude(e => e.BandLocationLeaderPeriodEmployeePeriods).ThenInclude(e => e.BandLocationLeaderPeriodEmployeePeriodAttendances)
-                .Include(c => c.BandLocationLeaders).ThenInclude(a => a.BandLocationLeaderPeriods).ThenInclude(e => e.Attendances)
-                .FirstOrDefaultAsync(e => e.Id == bandLocationId && e.BusinessId == BusinessId);
+            return await _context.BandLocations.Where(e => e.LocationId == locationId && !e.IsDeleted).Select(e => e.BandId).ToListAsync();
         }
 
         public async Task<BandLocation> GetBandLocationReport(int? bandLocationId, string businessId)

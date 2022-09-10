@@ -91,5 +91,12 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .ToListAsync();
 
         }
+
+        public int GetBandLocationInnerReport(int? bandLocationId, int? typeId ,string businessId)
+        {
+            return _context.BandLocationLeaderPeriodEmployees
+                .Where(e => e.BusinessId == businessId && !e.IsDeleted && e.BandLocationLeaderPeriod.BandLocationLeader.BandLocationId == bandLocationId)
+                .Count(e => e.BandLocationLeaderPeriodEmployeePeriods.Any(e => e.BandLocationLeaderPeriodEmployee.Employee.TypeId == typeId));
+        }
     }
 }

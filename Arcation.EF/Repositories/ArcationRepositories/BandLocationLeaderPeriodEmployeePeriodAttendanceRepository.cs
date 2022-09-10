@@ -68,5 +68,19 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .Where(e => e.BandLocationLeaderPeriodEmployeePeriod.BandLocationLeaderPeriodEmployee.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.LocationId == locationId)
                 .Sum(e => e.WorkingHours);
         }
+
+        public double GetBandLocationInnerReport(int? bandLocationId, string businessId)
+        {
+            return  _context.BandLocationLeaderPeriodEmployeePeriodAttendances
+                .Where(e => !e.IsDeleted && e.BusinessId == businessId && e.BandLocationLeaderPeriodEmployeePeriod.BandLocationLeaderPeriodEmployee.BandLocationLeaderPeriod.BandLocationLeader.BandLocationId == bandLocationId)
+                .Sum(e => e.WorkingHours * e.BandLocationLeaderPeriodEmployeePeriod.EmployeeSalary);
+        }
+
+        public double GetBandLocationInnerReportBorrow(int? bandLocationId, string businessId)
+        {
+            return _context.BandLocationLeaderPeriodEmployeePeriodAttendances
+                .Where(e => !e.IsDeleted && e.BusinessId == businessId && e.BandLocationLeaderPeriodEmployeePeriod.BandLocationLeaderPeriodEmployee.BandLocationLeaderPeriod.BandLocationLeader.BandLocationId == bandLocationId)
+                .Sum(e => e.BorrowValue);
+        }
     }
 }

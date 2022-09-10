@@ -102,5 +102,19 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .Sum(e => e.WorkingHours);
         }
 
+        public double GetBandLocationInnerReport(int? bandLocationId, string businessId)
+        {
+            return  _context.Attendances
+                .Where(e => e.BusinessId == businessId && !e.IsDeleted && e.BandLocationLeaderPeriod.BandLocationLeader.BandLocationId == bandLocationId)
+                .Sum(e => e.WorkingHours * e.BandLocationLeaderPeriod.LeaderSalary);
+        }
+
+        public double GetBandLocationInnerReportPaied(int? bandLocationId, string businessId)
+        {
+            return _context.Attendances
+                .Where(e => e.BusinessId == businessId && !e.IsDeleted && e.BandLocationLeaderPeriod.BandLocationLeader.BandLocationId == bandLocationId)
+                .Sum(e => e.BorrowValue + e.BandLocationLeaderPeriod.TotalPaied);
+        }
+
     }
 }

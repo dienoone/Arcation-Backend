@@ -51,7 +51,7 @@ namespace Arcation.API.Controllers
         {
             if (companyId != null && id != null)
             {
-                var entity = await _unitOfWork.Locations.GetLocationAsync(HttpContext.GetBusinessId(), companyId, id);
+                var entity = await _unitOfWork.Locations.GetLocation(HttpContext.GetBusinessId(), id);
                 if (entity != null)
                 {
                     return Ok(_mapper.Map<LocationViewModel>(entity));
@@ -101,7 +101,7 @@ namespace Arcation.API.Controllers
                         await _unitOfWork.BandLocations.AddRangeAsync(bandLocations);
                         if (await _unitOfWork.Complete())
                         {
-                            var addedLocation = await _unitOfWork.Locations.GetLocationAsync(HttpContext.GetBusinessId(), companyId, location.Id);
+                            var addedLocation = await _unitOfWork.Locations.GetLocation(HttpContext.GetBusinessId(), location.Id);
                             return CreatedAtRoute("GetLocation", new { controller = "CompanyLocations", companyId = location.CompanyId, id = location.Id }, _mapper.Map<LocationViewModel>(addedLocation));
                         }
                         return BadRequest();
@@ -123,28 +123,53 @@ namespace Arcation.API.Controllers
             {
                 if (id != null)
                 {
+                    LocationViewModel locationViewModel = new();
                     Location queryLocation = await _unitOfWork.Locations.FindAsync(c => c.Id == id && c.BusinessId == HttpContext.GetBusinessId());
+
 
                     if (queryLocation != null)
                     {
                         queryLocation.LocationName = model.LocationName;
                         queryLocation.StartingDate = model.StartingDate;
+                        queryLocation.EndingDate = model.EndingDate;
 
                         var oldlist = await _unitOfWork.BandLocations.GetBandsId(queryLocation.Id);
 
                         List<BandLocation> bandLocations = await UpdateBandLocation(model, queryLocation, oldlist);
-                        if(bandLocations != null)
+                        if(bandLocations.Count > 0)
                         {
                             await _unitOfWork.BandLocations.AddRangeAsync(bandLocations);
                         }
 
-                        if (await _unitOfWork.Complete())
-                        {
-                            var addedLocation = await _unitOfWork.Locations.GetLocationAsync(HttpContext.GetBusinessId(), queryLocation.CompanyId, id);
-                            return Ok(_mapper.Map<LocationViewModel>(queryLocation));
-                        }
 
-                        return BadRequest();
+
+                        await _unitOfWork.Complete();
+                        Location tryMapper = await _unitOfWork.Locations.GetLocation(HttpContext.GetBusinessId(), id);
+                        return Ok(_mapper.Map<LocationViewModel>(tryMapper));
+                        
+                       /* Location addedLocation = await _unitOfWork.Locations.FindAsync(e => e.Id == queryLocation.Id && e.BusinessId == HttpContext.GetBusinessId());
+                        IEnumerable<BandLocation> queryBandLocation = await _unitOfWork.BandLocations.FindAllAsync(e => e.LocationId == addedLocation.Id && !e.IsDeleted && e.BusinessId == HttpContext.GetBusinessId(), new[] { "Band" });
+
+                        locationViewModel.LocationName = addedLocation.LocationName;
+                        locationViewModel.EndingDate = addedLocation.EndingDate;
+                        locationViewModel.StartingDate = addedLocation.StartingDate;
+                        locationViewModel.LocationState = addedLocation.LocationState;
+                        locationViewModel.Id = addedLocation.Id;
+                        List<BandLocationDto> bandLocationDtos = new List<BandLocationDto>();
+                        foreach(BandLocation band in queryBandLocation)
+                        {
+                            BandLocationDto bandLocationDto = new BandLocationDto
+                            {
+                                BandId = band.BandId,
+                                BandLocationId = band.Id,
+                                BandName = band.Band.BandName
+                            };
+                            bandLocationDtos.Add(bandLocationDto);
+                        }
+                        locationViewModel.Bands = bandLocationDtos;
+
+                        return Ok(locationViewModel);*/
+                        
                     }
                     return NotFound();
                 }
@@ -167,12 +192,9 @@ namespace Arcation.API.Controllers
                     if (queryLocation != null)
                     {
                         queryLocation.IsDeleted = true;
-                        if(await _unitOfWork.Complete())
-                        {
-                            return new NoContentResult();
-                        }
-                        return BadRequest();
-                        
+                        await _unitOfWork.Complete();
+                        return NoContent();
+
                     }
                     return NotFound();
                 }
@@ -199,6 +221,11 @@ namespace Arcation.API.Controllers
                 }
             }
 
+            // old [5, 10, 30]
+            // bandIds [15, 5, 10] 0
+            // new []
+            // deleted []
+
             for (int i = 0; i < oldlist.Count; i++)
             {
                 if (!model.bandIds.Contains(oldlist[i]))
@@ -207,30 +234,34 @@ namespace Arcation.API.Controllers
                 }
             }
 
-            if (newList != null)
+            if (newList.Count > 0)
             {
-                
-
                 foreach (int newid in newList)
                 {
-                    var bandLocation = new BandLocation
+                    Band band = await _unitOfWork.Bands.FindAsync(e => e.Id == newid && e.BusinessId == HttpContext.GetBusinessId());
+                    if(band != null)
                     {
-                        BandId = newid,
-                        LocationId = queryLocation.Id
-                    };
-                    bandLocations.Add(bandLocation);
-
-                    
+                        var bandLocation = new BandLocation
+                        {
+                            BandId = newid,
+                            LocationId = queryLocation.Id,
+                            IsDeleted = false,
+                            BusinessId = HttpContext.GetBusinessId(),
+                            CreatedAt = DateTime.UtcNow,
+                            CreatedBy = HttpContext.GetUserId()
+                        };
+                        bandLocations.Add(bandLocation);
+                    }    
                 }
             }
 
-            if (deletedList != null)
+            if (deletedList.Count > 0)
             {
                 foreach (int deletedId in deletedList)
                 {
-                    var queryBandLocation = await _unitOfWork.BandLocations.FindAsync(e => e.LocationId == queryLocation.Id && e.BandId == deletedId);
+                    BandLocation queryBandLocation = await _unitOfWork.BandLocations.FindAsync(e => e.LocationId == queryLocation.Id && e.BandId == deletedId && !e.IsDeleted);
                     queryBandLocation.IsDeleted = true;
-
+                    await _unitOfWork.Complete();
                 }
             }
 

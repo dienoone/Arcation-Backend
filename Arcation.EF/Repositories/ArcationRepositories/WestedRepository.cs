@@ -41,5 +41,12 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .Where(e => e.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.LocationId == locationId)
                 .Sum(e => e.Value);
         }
+
+        public double GetBandLocationInnerReport(int? bandLocationId, string businessId)
+        {
+            return _context.Westeds
+                .Where(e => e.BandLocationLeaderPeriod.BandLocationLeader.BandLocationId == bandLocationId && e.BusinessId == businessId && !e.IsDeleted)
+                .Sum(e => e.Value);
+        }
     }
 }

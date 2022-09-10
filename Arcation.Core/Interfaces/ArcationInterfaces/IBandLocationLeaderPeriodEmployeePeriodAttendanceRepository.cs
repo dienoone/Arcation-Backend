@@ -16,5 +16,9 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
         double GetTotalCompanyHours(int? companyId);
         double GetTotalBandHours(int? bandId);
         double GetTotalLocationHours(int? locationId);
+
+
+        double GetBandLocationInnerReport(int? bandLocationId, string businessId);
+        double GetBandLocationInnerReportBorrow(int? bandLocationId, string businessId);
     }
 }
