@@ -167,7 +167,7 @@ namespace Arcation.API.Controllers
                     {
                         queryPeriod.Name = dto.PeriodName;
                         queryPeriod.StartingDate = dto.StartingDate;
-                        queryPeriod.EndingDate = dto.EndingDate;
+                        queryPeriod.EndingDate = DateTime.UtcNow;
                         queryPeriod.State = dto.PeriodState;
 
                         await _unitOfWork.Complete();

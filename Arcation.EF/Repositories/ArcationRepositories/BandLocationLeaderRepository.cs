@@ -25,6 +25,13 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 !bll.IsDeleted).ToListAsync();
         }
 
+        public async Task<IEnumerable<BandLocationLeader>> SearchLeadersWithPeriods(int? bandLocationId, string name ,string businessId)
+        {
+            return await _context.BandLocationLeaders.Include(bll => bll.Leader)
+                .Include(bll => bll.BandLocationLeaderPeriods.Where(e => !e.IsDeleted)).ThenInclude(e => e.Period).Where(bll => bll.BandLocationId == bandLocationId && bll.BusinessId == businessId &&
+                !bll.IsDeleted && bll.Leader.Name.Contains(name)).ToListAsync();
+        }
+
         public async Task<BandLocationLeader> GetLeaderWithPeriod(int? bandLocationId,int? bandLocationLeaderId, string businessId)
         {
             return await _context.BandLocationLeaders.Include(bll => bll.Leader)

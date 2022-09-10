@@ -10,6 +10,7 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
     public interface IBandLocationLeaderPeriodEmployeeRepository : IBaseRepository<BandLocationLeaderPeriodEmployee>
     {
         Task<List<BandLocationLeaderPeriodEmployee>> GetPeriodEmployeeDataAsync(int? bandLocationLeaderPeriodId, string bussinessId);
+        Task<List<BandLocationLeaderPeriodEmployee>> SearchPeriodEmployeeDataAsync(int? bandLocationLeaderPeriodId, string name, string bussinessId);
         Task<BandLocationLeaderPeriodEmployee> GetSinglePeriodEmployeeDataAsync(int? bandLocationLeaderPeriodId, int? Id, string bussinessId);
         Task<IEnumerable<BandLocationLeaderPeriodEmployee>> GetForInitializeAttendance(int? bandLocationLeaderPeriodId, string bussinessId);
 

@@ -70,11 +70,11 @@ namespace Arcation.API.Controllers
 
         // api/Bills : => add Bill
         [HttpPost]
-        public async Task<IActionResult> AddBill([FromForm] AddBillDto dto)
+        public async Task<IActionResult> AddBill([FromBody] AddBillDto dto)
         {
             if (ModelState.IsValid)
             {
-                Bill IsExist = await _unitOfWork.Bills.FindAsync(e => e.BusinessId == HttpContext.GetBusinessId() && e.BillCode == dto.BillCode);
+                Bill IsExist = await _unitOfWork.Bills.FindAsync(e => e.BusinessId == HttpContext.GetBusinessId() && e.BillCode == dto.BillCode && !e.IsDeleted);
                 if (IsExist == null)
                 {
 
@@ -91,26 +91,26 @@ namespace Arcation.API.Controllers
                         BusinessId = HttpContext.GetBusinessId()
                     };
 
-                    // ----- This Part Related To Photos ---------
-                    string photo = "photo";
-                    if (dto.BillPhoto != null)
-                    {
-                        if (dto.BillPhoto.Length > 0)
-                        {
-                            photo = await _imageHandler.UploadImage(dto.BillPhoto);
-                            if (photo == "Invalid image file") return BadRequest();
-                        }
-                    }
+                    //// ----- This Part Related To Photos ---------
+                    //string photo = "photo";
+                    //if (dto.BillPhoto != null)
+                    //{
+                    //    if (dto.BillPhoto.Length > 0)
+                    //    {
+                    //        photo = await _imageHandler.UploadImage(dto.BillPhoto);
+                    //        if (photo == "Invalid image file") return BadRequest();
+                    //    }
+                    //}
 
-                    if (photo != "photo")
-                    {
-                        newBill.BillPhoto = _appURL.AppUrl + photo;
-                    }
-                    else
-                    {
-                        newBill.BillPhoto = null;
-                    }
-                    // --------------- End Region ----------------
+                    //if (photo != "photo")
+                    //{
+                    //    newBill.BillPhoto = _appURL.AppUrl + photo;
+                    //}
+                    //else
+                    //{
+                    //    newBill.BillPhoto = null;
+                    //}
+                    //// --------------- End Region ----------------
 
                     await _unitOfWork.Bills.AddAsync(newBill);
                     if(await _unitOfWork.Complete())
@@ -128,13 +128,13 @@ namespace Arcation.API.Controllers
 
         // api/Bills/{id} => Update Bill
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateBill([FromRoute] int? id, [FromForm] UpdateBillDto dto)
+        public async Task<IActionResult> UpdateBill([FromRoute] int? id, [FromBody] UpdateBillDto dto)
         {
             if (ModelState.IsValid)
             {
                 if (id != null)
                 {
-                    Bill queryBill = await _unitOfWork.Bills.FindAsync(b => b.BillId == id && b.BusinessId == HttpContext.GetBusinessId());
+                    Bill queryBill = await _unitOfWork.Bills.FindAsync(b => b.BillId == id && b.BusinessId == HttpContext.GetBusinessId() && !b.IsDeleted);
                     if (queryBill != null)
                     {
 
@@ -143,26 +143,26 @@ namespace Arcation.API.Controllers
                         queryBill.BillNote = dto.BillNote;
                         queryBill.BillPrice = dto.BillPrice;
 
-                        // ----- This Part Related To Photos ---------
-                        string photo = "photo";
-                        if (dto.BillPhoto != null)
-                        {
-                            if (dto.BillPhoto.Length > 0)
-                            {
-                                photo = await _imageHandler.UploadImage(dto.BillPhoto);
-                                if (photo == "Invalid image file") return BadRequest();
-                            }
-                        }
+                        //// ----- This Part Related To Photos ---------
+                        //string photo = "photo";
+                        //if (dto.BillPhoto != null)
+                        //{
+                        //    if (dto.BillPhoto.Length > 0)
+                        //    {
+                        //        photo = await _imageHandler.UploadImage(dto.BillPhoto);
+                        //        if (photo == "Invalid image file") return BadRequest();
+                        //    }
+                        //}
 
-                        if (photo != "photo")
-                        {
-                            queryBill.BillPhoto = _appURL.AppUrl + photo;
-                        }
-                        else
-                        {
-                            queryBill.BillPhoto = null;
-                        }
-                        // --------------- End Region ----------------
+                        //if (photo != "photo")
+                        //{
+                        //    queryBill.BillPhoto = _appURL.AppUrl + photo;
+                        //}
+                        //else
+                        //{
+                        //    queryBill.BillPhoto = null;
+                        //}
+                        //// --------------- End Region ----------------
 
                         if (await _unitOfWork.Complete())
                         {

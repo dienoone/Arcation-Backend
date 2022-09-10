@@ -48,6 +48,18 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .FirstOrDefaultAsync(e => e.Id == attendanceId && e.BandLocationLeaderPeriodId == bandLocationLeaderPeriodId);
         }
 
+        public async Task<Attendance> GetSearchAttendance(int? attendanceId, string name, string businessID)
+        {
+            return await _context.Attendances
+                .Include(e => e.BandLocationLeaderPeriodEmployeePeriodAttendances.Where(e => !e.IsDeleted && e.BandLocationLeaderPeriodEmployeePeriod.State && e.BandLocationLeaderPeriodEmployeePeriod.BandLocationLeaderPeriodEmployee.Employee.Name.Contains(name)))
+                .ThenInclude(e => e.BandLocationLeaderPeriodEmployeePeriod)
+                .ThenInclude(e => e.BandLocationLeaderPeriodEmployee.Employee)
+                .ThenInclude(e => e.Type)
+                .Include(e => e.BandLocationLeaderPeriod)
+                .Include(e => e.BandLocationLeaderPeriod.BandLocationLeader.Leader)
+                .FirstOrDefaultAsync(e => e.Id == attendanceId && e.BusinessId == businessID);
+        }
+
         public double GetTotalCompanyBorrow(int? companyId)
         {
             return _context.Attendances

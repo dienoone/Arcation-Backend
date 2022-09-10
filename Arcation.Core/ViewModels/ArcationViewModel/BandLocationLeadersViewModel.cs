@@ -29,6 +29,7 @@ namespace Arcation.Core.ViewModels.ArcationViewModel
     {
         public int BandLocationLeaderId { get; set; }
         public string LeaderName { get; set; }
+        public double LeaderSalary { get; set; }
         public List<LeaderPeriods> LeaderPeriods { get; set; }
     }
     public class LeaderPeriods

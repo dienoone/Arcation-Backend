@@ -19,12 +19,18 @@ namespace Arcation.Core.ViewModels.ArcationViewModel
     }
     public class AttendanceEmployeeDto
     {
+        [Required]
         public int BandLocationLeaderPeriodEmployeePeriodAttendaceId { get; set; }
         public string EmployeeName { get; set; }
         public string EmployeeType { get; set; }
+        [Required]
         public bool AttendanceState { get; set; }
+        [Required]
         public double BorrowValue { get; set; }
+        [Required]
         public double WorkingHours { get; set; }
+        [Required]
+        public bool IsLeader { get; set; }
 
     }
     public class TakeAttendanceDto

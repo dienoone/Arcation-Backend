@@ -11,6 +11,7 @@ namespace Arcation.Core.Models.ArcationModels.Main
         public int ExtractId { get; set; }
         public string ExtractName { get; set; }
         public int BandLocationId { get; set; }
+        public double TotalPrice { get; set; }
         public BandLocation BandLocation { get; set; }
 
         // Relations: 

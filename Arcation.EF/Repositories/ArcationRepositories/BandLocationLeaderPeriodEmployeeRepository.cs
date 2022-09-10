@@ -26,6 +26,14 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 && bllpe.BusinessId == bussinessId && bllpe.BandLocationLeaderPeriodId == bandLocationLeaderPeriodId && !bllpe.Employee.IsDeleted && !bllpe.Employee.Type.IsDeleted).ToListAsync();
         }
 
+        public async Task<List<BandLocationLeaderPeriodEmployee>> SearchPeriodEmployeeDataAsync(int? bandLocationLeaderPeriodId, string name,string bussinessId)
+        {
+
+            return await _context.BandLocationLeaderPeriodEmployees.Include(bllpe => bllpe.Employee).ThenInclude(e => e.Type)
+                .Include(bllpe => bllpe.BandLocationLeaderPeriodEmployeePeriods.Where(e => !e.IsDeleted)).Where(bllpe => !bllpe.IsDeleted
+                && bllpe.BusinessId == bussinessId && bllpe.BandLocationLeaderPeriodId == bandLocationLeaderPeriodId && !bllpe.Employee.IsDeleted && !bllpe.Employee.Type.IsDeleted && bllpe.Employee.Name.Contains(name)).ToListAsync();
+        }
+
         public async Task<BandLocationLeaderPeriodEmployee> GetSinglePeriodEmployeeDataAsync(int? bandLocationLeaderPeriodId, int? Id, string bussinessId)
         {
             return await _context.BandLocationLeaderPeriodEmployees.Include(bllpe => bllpe.Employee).ThenInclude(e => e.Type)

@@ -53,7 +53,8 @@ namespace Arcation.API.Controllers
                 Attendance attendance = await _unitOfWork.Attendances.GetAttendance(attendanceId, bandLocationLeaderPeriodId);
                 if (attendance != null)
                 {
-                    return Ok(_mapper.Map<AttendanceDto>(attendance));
+                    List<AttendanceEmployeeDto> attendanceDto = AttendanceHelper(attendance);
+                    return Ok(attendanceDto);
                 }
                 return NotFound();
             }
@@ -64,109 +65,118 @@ namespace Arcation.API.Controllers
         [HttpPost("InitializeAttendance/{bandLocationLeaderPeriodId}")]
         public async Task<IActionResult> InitializeAttendance([FromRoute] int? bandLocationLeaderPeriodId)
         {
-            if (bandLocationLeaderPeriodId != null)
+            try 
             {
-                var bandLocationLeaderPeriod = await _unitOfWork.BandLocationLeaderPeriods.FindAsync(e => e.Id == bandLocationLeaderPeriodId && !e.IsDeleted && e.BusinessId == HttpContext.GetBusinessId());             
-                var attendance = await _unitOfWork.Attendances.FindAsync(e => e.BandLocationLeaderPeriodId == bandLocationLeaderPeriodId && !e.ended && e.BusinessId == HttpContext.GetBusinessId() && e.BandLocationLeaderPeriod.PeriodId == bandLocationLeaderPeriod.PeriodId);
-                if (bandLocationLeaderPeriod != null && attendance == null)
+                if (bandLocationLeaderPeriodId != null)
                 {
-                    Attendance newAttendance = new()
+                    var bandLocationLeaderPeriod = await _unitOfWork.BandLocationLeaderPeriods.FindAsync(e => e.Id == bandLocationLeaderPeriodId && !e.IsDeleted && e.BusinessId == HttpContext.GetBusinessId());
+                    var attendance = await _unitOfWork.Attendances.FindAsync(e => e.BandLocationLeaderPeriodId == bandLocationLeaderPeriodId && !e.ended && e.BusinessId == HttpContext.GetBusinessId() && e.BandLocationLeaderPeriod.PeriodId == bandLocationLeaderPeriod.PeriodId);
+                    if (bandLocationLeaderPeriod != null && attendance == null)
                     {
-                        BandLocationLeaderPeriodId = bandLocationLeaderPeriod.Id,
-                        BorrowValue = 0,
-                        AttendanceState = false,
-                        ended = false,
-                        Date = DateTime.UtcNow,
-                        WorkingHours = 0,
-                        IsDeleted = false,
-                        CreatedAt = DateTime.UtcNow,
-                        CreatedBy = HttpContext.GetUserId(),
-                        BusinessId = HttpContext.GetBusinessId()
-                    };
-                    var result = await _unitOfWork.Attendances.AddAsync(newAttendance);
-
-                    if (result != null && await _unitOfWork.Complete())
-                    {
-                        List<int> neededList = new List<int>();
-                        var employees = await _unitOfWork.BandLocationLeaderPeriodEmployees.GetForInitializeAttendance(bandLocationLeaderPeriodId, HttpContext.GetBusinessId());
-                        foreach (var employee in employees)
+                        Attendance newAttendance = new()
                         {
-                            if (employee.BandLocationLeaderPeriodEmployeePeriods.Any(p => p.State))
+                            BandLocationLeaderPeriodId = bandLocationLeaderPeriod.Id,
+                            BorrowValue = 0,
+                            AttendanceState = false,
+                            ended = false,
+                            Date = DateTime.UtcNow,
+                            WorkingHours = 0,
+                            IsDeleted = false,
+                            CreatedAt = DateTime.UtcNow,
+                            CreatedBy = HttpContext.GetUserId(),
+                            BusinessId = HttpContext.GetBusinessId()
+                        };
+                        var result = await _unitOfWork.Attendances.AddAsync(newAttendance);
+
+                        if (result != null && await _unitOfWork.Complete())
+                        {
+                            List<int> neededList = new List<int>();
+                            var employees = await _unitOfWork.BandLocationLeaderPeriodEmployees.GetForInitializeAttendance(bandLocationLeaderPeriodId, HttpContext.GetBusinessId());
+                            foreach (var employee in employees)
                             {
-                                var period = employee.BandLocationLeaderPeriodEmployeePeriods.FirstOrDefault(e => e.State);
-                                neededList.Add(period.Id);
-                            }
-                            else
-                            {
-                                var newPeriod = new BandLocationLeaderPeriodEmployeePeriod
+                                if (employee.BandLocationLeaderPeriodEmployeePeriods.Any(p => p.State))
                                 {
-                                    StartingDate = DateTime.UtcNow,
-                                    EndingDate = null,
-                                    State = true,
-                                    PayiedState = false,
-                                    TotalBorrow = 0,
-                                    EmployeeSalary = employee.Employee.Salary,
-                                    IsDeleted = false,
-                                    CreatedAt = DateTime.UtcNow,
-                                    CreatedBy = HttpContext.GetUserId(),
-                                    BusinessId = HttpContext.GetBusinessId(),
-                                    BandLocationLeaderPeriodEmployeeId = employee.Id
-                                };
-                                var isAdded = await _unitOfWork.BandLocationLeaderPeriodEmployeePeriods.AddAsync(newPeriod);
-                                if (isAdded != null && await _unitOfWork.Complete())
-                                {
-                                    neededList.Add(isAdded.Id);
+                                    var period = employee.BandLocationLeaderPeriodEmployeePeriods.FirstOrDefault(e => e.State);
+                                    neededList.Add(period.Id);
                                 }
-                            }
-                        }
-
-                        if (neededList.Count > 0)
-                        {
-                            List<BandLocationLeaderPeriodEmployeePeriodAttendance> newlist = new List<BandLocationLeaderPeriodEmployeePeriodAttendance>();
-                            foreach (var id in neededList)
-                            {
-                                var ha = new BandLocationLeaderPeriodEmployeePeriodAttendance
+                                else
                                 {
-                                    AttendanceId = result.Id,
-                                    BandLocationLeaderPeriodEmployeePeriodId = id,
-                                    State = false,
-                                    BorrowValue = 0,
-                                    WorkingHours = 0,
-                                    IsDeleted = false,
-                                    CreatedAt = DateTime.UtcNow,
-                                    CreatedBy = HttpContext.GetUserId(),
-                                    BusinessId = HttpContext.GetBusinessId()
-                                };
-                                newlist.Add(ha);
-                            }
-
-                            if (newlist.Count > 0)
-                            {
-                                var lastResult = await _unitOfWork.BandLocationLeaderPeriodEmployeePeriodAttendances.AddRangeAsync(newlist);
-                                if (lastResult != null)
-                                {
-                                    if (await _unitOfWork.Complete())
+                                    var newPeriod = new BandLocationLeaderPeriodEmployeePeriod
                                     {
-                                        var finalResult = await _unitOfWork.Attendances.GetInializeAttendance(newAttendance.Id);
-                                        return Ok(_mapper.Map<AttendanceDto>(newAttendance));
+                                        StartingDate = DateTime.UtcNow,
+                                        EndingDate = null,
+                                        State = true,
+                                        PayiedState = false,
+                                        TotalBorrow = 0,
+                                        EmployeeSalary = employee.Employee.Salary,
+                                        IsDeleted = false,
+                                        CreatedAt = DateTime.UtcNow,
+                                        CreatedBy = HttpContext.GetUserId(),
+                                        BusinessId = HttpContext.GetBusinessId(),
+                                        BandLocationLeaderPeriodEmployeeId = employee.Id
+                                    };
+                                    var isAdded = await _unitOfWork.BandLocationLeaderPeriodEmployeePeriods.AddAsync(newPeriod);
+                                    if (isAdded != null && await _unitOfWork.Complete())
+                                    {
+                                        neededList.Add(isAdded.Id);
                                     }
                                 }
-                                return BadRequest();
                             }
-                            return NoContent();
+
+                            if (neededList.Count > 0)
+                            {
+                                List<BandLocationLeaderPeriodEmployeePeriodAttendance> newlist = new List<BandLocationLeaderPeriodEmployeePeriodAttendance>();
+                                foreach (var id in neededList)
+                                {
+                                    var ha = new BandLocationLeaderPeriodEmployeePeriodAttendance
+                                    {
+                                        AttendanceId = result.Id,
+                                        BandLocationLeaderPeriodEmployeePeriodId = id,
+                                        State = false,
+                                        BorrowValue = 0,
+                                        WorkingHours = 0,
+                                        IsDeleted = false,
+                                        CreatedAt = DateTime.UtcNow,
+                                        CreatedBy = HttpContext.GetUserId(),
+                                        BusinessId = HttpContext.GetBusinessId()
+                                    };
+                                    newlist.Add(ha);
+                                }
+
+                                if (newlist.Count > 0)
+                                {
+                                    var lastResult = await _unitOfWork.BandLocationLeaderPeriodEmployeePeriodAttendances.AddRangeAsync(newlist);
+                                    if (lastResult != null)
+                                    {
+                                        if (await _unitOfWork.Complete())
+                                        {
+                                            var finalResult = await _unitOfWork.Attendances.GetInializeAttendance(newAttendance.Id);
+                                            return Ok(_mapper.Map<AttendanceDto>(newAttendance));
+                                        }
+                                    }
+                                    return BadRequest();
+                                }
+                                return NoContent();
+                            }
+
+                            Attendance dto = await _unitOfWork.Attendances.GetAttendance(result.Id, bandLocationLeaderPeriodId);
+                            List<AttendanceEmployeeDto> attendanceDto = AttendanceHelper(attendance);
+                            return Ok(attendanceDto);
                         }
-                        return NoContent();
+                        return BadRequest();
                     }
                     return BadRequest();
                 }
                 return BadRequest();
             }
-            return BadRequest();
+            catch (Exception e) {
+                return BadRequest(e.Message);
+            }
         }
 
         // api/attendances/TakeAttendance/{attendanceId} => get Attendance:
         [HttpPost("TakeAttendance/{attendanceId}")]
-        public async Task<IActionResult> TakeAttendance([FromRoute] int? attendanceId, [FromBody] TakeAttendanceDto dto)
+        public async Task<IActionResult> TakeAttendance([FromRoute] int? attendanceId, [FromBody] List<AttendanceEmployeeDto> dto)
         {
             if (attendanceId != null)
             {
@@ -175,27 +185,45 @@ namespace Arcation.API.Controllers
                     Attendance queryAttendance = await _unitOfWork.Attendances.TakeAttendance(attendanceId);
                     if (queryAttendance != null)
                     {
-                        queryAttendance.AttendanceState = dto.AttendanceState;
-                        queryAttendance.BorrowValue = dto.BorrowValue;
-                        queryAttendance.WorkingHours = dto.WorkingHours;
-                        foreach (var employee in dto.Employees)
+                        foreach (AttendanceEmployeeDto emp in dto) 
                         {
-                            var employeeAttendance = queryAttendance.BandLocationLeaderPeriodEmployeePeriodAttendances.FirstOrDefault(e => e.Id == employee.BandLocationLeaderPeriodEmployeePeriodAttendaceId);
-                            if (employeeAttendance != null)
+                            if (emp.IsLeader)
                             {
-                                employeeAttendance.State = employee.AttendanceState;
-                                employeeAttendance.WorkingHours = employee.WorkingHours;
-                                employeeAttendance.BorrowValue = employee.BorrowValue;
+                                var attendance = await _unitOfWork.Attendances.FindAsync(e => e.Id == queryAttendance.Id && e.BandLocationLeaderPeriodId == emp.BandLocationLeaderPeriodEmployeePeriodAttendaceId);
+                                if (attendance != null)
+                                {
+                                    queryAttendance.AttendanceState = emp.AttendanceState;
+                                    queryAttendance.BorrowValue = emp.BorrowValue;
+                                    queryAttendance.WorkingHours = emp.WorkingHours;
+                                }
+                                else 
+                                {
+                                    return NotFound("BandLocationLeaderPeriodId not found");
+                                }
+                            }
+                            else
+                            {
+                                var employeeAttendance = queryAttendance.BandLocationLeaderPeriodEmployeePeriodAttendances.FirstOrDefault(e => e.Id == emp.BandLocationLeaderPeriodEmployeePeriodAttendaceId);
+                                if (employeeAttendance != null)
+                                {
+                                    employeeAttendance.State = emp.AttendanceState;
+                                    employeeAttendance.WorkingHours = emp.WorkingHours;
+                                    employeeAttendance.BorrowValue = emp.BorrowValue;
+                                }
+                                else 
+                                {
+                                    return NotFound("BandLocationLeaderPeriodEmployeePeriodAttendanceId not found");
+                                }
                             }
                         }
+
                         queryAttendance.ended = true;
-                        
-                        if(await _unitOfWork.Complete())
-                        {
-                            var finalResult = await _unitOfWork.Attendances.GetAttendance(queryAttendance.Id, queryAttendance.BandLocationLeaderPeriodId);
-                            return Ok(_mapper.Map<AttendanceDto>(finalResult));
-                        }
-                        return BadRequest();
+                        await _unitOfWork.Complete();
+
+                        var finalResult = await _unitOfWork.Attendances.GetAttendance(queryAttendance.Id, queryAttendance.BandLocationLeaderPeriodId);
+                        List<AttendanceEmployeeDto> attendanceDto = AttendanceHelper(finalResult);
+                        return Ok(attendanceDto);
+
                     }
                     return NotFound();
                 }
@@ -219,7 +247,8 @@ namespace Arcation.API.Controllers
                         if(await _unitOfWork.Complete())
                         {
                             var finalResult = await _unitOfWork.Attendances.GetAttendance(queryAttendance.Id, queryAttendance.BandLocationLeaderPeriodId);
-                            return Ok(_mapper.Map<AttendanceDto>(finalResult));
+                            List<AttendanceEmployeeDto> attendanceDto = AttendanceHelper(finalResult);
+                            return Ok(attendanceDto);
                         }
                     }
                     return NotFound();
@@ -248,6 +277,43 @@ namespace Arcation.API.Controllers
             }
             return NotFound();
         }
+
+
+        private List<AttendanceEmployeeDto> AttendanceHelper(Attendance attendance)
+        {
+            List<AttendanceEmployeeDto> attendanceDto = new();
+
+            AttendanceEmployeeDto leaderDto = new AttendanceEmployeeDto
+            {
+                BandLocationLeaderPeriodEmployeePeriodAttendaceId = attendance.BandLocationLeaderPeriodId,
+                EmployeeName = attendance.BandLocationLeaderPeriod.BandLocationLeader.Leader.Name,
+                EmployeeType = "Leader",
+                AttendanceState = attendance.AttendanceState,
+                WorkingHours = attendance.WorkingHours,
+                BorrowValue = attendance.BorrowValue,
+                IsLeader = true
+            };
+
+            attendanceDto.Add(leaderDto);
+
+            foreach (var employee in attendance.BandLocationLeaderPeriodEmployeePeriodAttendances)
+            {
+                AttendanceEmployeeDto dto = new AttendanceEmployeeDto
+                {
+                    BandLocationLeaderPeriodEmployeePeriodAttendaceId = employee.Id,
+                    EmployeeName = employee.BandLocationLeaderPeriodEmployeePeriod.BandLocationLeaderPeriodEmployee.Employee.Name,
+                    EmployeeType = employee.BandLocationLeaderPeriodEmployeePeriod.BandLocationLeaderPeriodEmployee.Employee.Type.Type,
+                    AttendanceState = employee.State,
+                    BorrowValue = employee.BorrowValue,
+                    WorkingHours = employee.WorkingHours,
+                    IsLeader = false
+                };
+                attendanceDto.Add(dto);
+            }
+
+            return attendanceDto;
+        }
+       
 
     }
 }

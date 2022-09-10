@@ -32,7 +32,7 @@ namespace Arcation.Core.ViewModels.ArcationViewModel
         [Required]
         public string BillCode { get; set; }
         public DateTime BillDate { get; set; }
-        public IFormFile BillPhoto { get; set; }
+        //public IFormFile BillPhoto { get; set; }
         [Required]
         public double BillPrice { get; set; }
         public string BillNote { get; set; }

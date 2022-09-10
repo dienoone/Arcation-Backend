@@ -25,6 +25,14 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<Leader>> SearchForAdd(string name ,string businessId)
+        {
+            return await _context.Leaders
+                .Include(e => e.BandLocationLeaders.Where(e => !e.IsDeleted))
+                .Where(e => e.BusinessId == businessId && !e.IsDeleted && e.Name.Contains(name))
+                .ToListAsync();
+        }
+
         public async Task<Leader> GetLeaderDetail(string LeaderId, string BusinessId)
         {
             return await _context.Leaders

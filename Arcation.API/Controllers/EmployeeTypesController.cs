@@ -90,24 +90,15 @@ namespace Arcation.API.Controllers
             {
                 if (id != null)
                 {
-                    EmployeeType isTypeExist = await _unitOfWork.EmployeeTypes.FindAsync(t => t.Type == model.Type);
-                    if (isTypeExist != null)
+                    EmployeeType queryType = await _unitOfWork.EmployeeTypes.FindAsync(c => c.Id == id);
+                    if (queryType != null)
                     {
-                        EmployeeType queryType = await _unitOfWork.EmployeeTypes.FindAsync(c => c.Id == id);
-                        if (queryType != null)
-                        {
-                            queryType.Type = model.Type;
-                            _unitOfWork.EmployeeTypes.Update(queryType);
+                        queryType.Type = model.Type;
+                        await _unitOfWork.Complete();
 
-                            if(await _unitOfWork.Complete())
-                            {
-                                return Ok(_mapper.Map<EmployeeTypeDto>(queryType));
-                            }
-                            return BadRequest();                           
-                        }
-                        return NotFound();
+                        return Ok(_mapper.Map<EmployeeTypeDto>(queryType));
                     }
-                    return BadRequest();
+                    return NotFound();
                 }
                 return NotFound();
             }

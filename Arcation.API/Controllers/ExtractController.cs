@@ -35,12 +35,12 @@ namespace Arcation.API.Controllers
         {
             if (bandLocationId != null)
             {
-                var entities = await _unitOfWork.Extracts.GetExtractsAsync(bandLocationId, HttpContext.GetBusinessId());
+                var entities = await _unitOfWork.Extracts.FindAllAsync(e => e.BandLocationId == bandLocationId && e.BusinessId == HttpContext.GetBusinessId() && !e.IsDeleted);
                 if (entities != null)
                 {
                     return Ok(_mapper.Map<IEnumerable<AllExtracts>>(entities));
                 }
-                return NotFound();
+                return NoContent();
             }
             return NotFound();
         }
@@ -51,7 +51,7 @@ namespace Arcation.API.Controllers
         {
             if (extractId != null)
             {
-                Extract entity = await _unitOfWork.Extracts.GetExtractAsync(extractId, HttpContext.GetBusinessId());
+                Extract entity = await _unitOfWork.Extracts.FindAsync(e => e.ExtractId == extractId && e.BusinessId ==HttpContext.GetBusinessId() && !e.IsDeleted);
                 if (entity != null)
                 {
                     return Ok(_mapper.Map<AllExtracts>(entity));
@@ -73,6 +73,7 @@ namespace Arcation.API.Controllers
                     Extract newExtract = new Extract
                     {
                         ExtractName = model.ExtractName,
+                        TotalPrice = model.TotalPrice,
                         BusinessId = HttpContext.GetBusinessId(),
                         IsDeleted = false,
                         CreatedAt = DateTime.UtcNow,
@@ -110,6 +111,7 @@ namespace Arcation.API.Controllers
                 {
 
                     queryExtract.ExtractName = model.ExtractName;
+                    queryExtract.TotalPrice = model.TotalPrice;
                     await _unitOfWork.Complete();
                     Extract entity = await _unitOfWork.Extracts.GetExtractAsync(extractId, HttpContext.GetBusinessId());
                     if (entity != null)

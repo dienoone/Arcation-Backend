@@ -10,6 +10,7 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
     public interface ILeaderRepository : IBaseRepository<Leader>
     {
         Task<IEnumerable<Leader>> GetForAdd(string businessId);
+        Task<IEnumerable<Leader>> SearchForAdd(string name, string businessId);
         Task<Leader> GetLeaderDetail(string LeaderId, string BusinessId);
     }
 }

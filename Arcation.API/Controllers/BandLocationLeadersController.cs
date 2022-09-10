@@ -284,16 +284,8 @@ namespace Arcation.API.Controllers
                     {
                         filter.Add(leader);
                     }
-                }
-
-                IEnumerable<Period> periods = await _unitOfWork.Periods.FindAllAsync(e => e.BandLocationId == bandLocationId && !e.IsDeleted && e.State);
-
-                AddLeaderPeriod addLeaderPeriod = new AddLeaderPeriod 
-                {
-                    Leaders = _mapper.Map<IEnumerable<AddLeaderToBandRequireDto>>(filter),
-                    Periods = _mapper.Map<IEnumerable<AddPeriodRequireDto>>(periods)
-                };                
-                return Ok(addLeaderPeriod);
+                }              
+                return Ok(_mapper.Map<IEnumerable<AddLeaderToBandRequireDto>>(filter));
             }
             return NotFound();
         }
@@ -304,7 +296,7 @@ namespace Arcation.API.Controllers
         {
             if(bandLocationId != null)
             {
-                IEnumerable<Period> periods = await _unitOfWork.Periods.FindAllAsync(e => e.BandLocationId == bandLocationId && !e.IsDeleted && !e.State);
+                IEnumerable<Period> periods = await _unitOfWork.Periods.FindAllAsync(e => e.BandLocationId == bandLocationId && !e.IsDeleted && e.State);
                 if(periods != null)
                 {
                     return Ok(_mapper.Map<IEnumerable<AddPeriodRequireDto>>(periods));

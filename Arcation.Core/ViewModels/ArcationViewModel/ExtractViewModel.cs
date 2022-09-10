@@ -11,6 +11,8 @@ namespace Arcation.Core.ViewModels.ArcationViewModel
     { 
         [Required]
         public string ExtractName { get; set; }
+        [Required]
+        public double TotalPrice { get; set; }
     }
     public class UpdateExtract : AddExtract { }
 
@@ -36,9 +38,9 @@ namespace Arcation.Core.ViewModels.ArcationViewModel
         public int ExtractId { get; set; }
         public string ExtractName { get; set; }
         public double TotalPrice { get; set; }
-        public IEnumerable<ExtactRowsDto> ExtactRows { get; set; }
 
     }
+
     public class ExtactRowsDto 
     {
         public int ExtractRowId { get; set; }

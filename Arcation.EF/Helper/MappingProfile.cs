@@ -100,6 +100,7 @@ namespace Arcation.EF.Helper
             CreateMap<BandLocationLeader, BandLocationLeaderPeriodsDto>()
                 .ForMember(dest => dest.BandLocationLeaderId, src => src.MapFrom(e => e.Id))
                 .ForMember(dest => dest.LeaderName, src => src.MapFrom(e => e.Leader.Name))
+                .ForMember(dest => dest.LeaderSalary, src => src.MapFrom(e => e.Leader.Salary))
                 .ForMember(dest => dest.LeaderPeriods, src => src.MapFrom(e => e.BandLocationLeaderPeriods.Select(n => new LeaderPeriods
                 {
                     bandLocationLeaderPeriodId = n.Id,
@@ -279,7 +280,7 @@ namespace Arcation.EF.Helper
             // InnerReports Controller:
             CreateMap<BandLocation, BLCompanyReport>() // TotalSalaryOFEmployee & Remainder : 
                 .ForMember(dest => dest.TotalBills, src => src.MapFrom(src => src.Bills.Sum(e => e.BillPrice)))
-                .ForMember(dest => dest.TotalExtracts, src => src.MapFrom(src => src.Extracts.Sum(e => e.ExtractRows.Sum(e => e.TotalPrice))))
+                .ForMember(dest => dest.TotalExtracts, src => src.MapFrom(src => src.Extracts.Sum(e => e.TotalPrice)))
                 .ForMember(dest => dest.TotalIncomes, src => src.MapFrom(src => src.Incomes.Sum(e => e.Price)))
                 .ForMember(dest => dest.TotalWested, src => src.MapFrom(src => src.BLWesteds.Sum(e => e.Price) + src.BandLocationLeaders.Sum(e => e.BandLocationLeaderPeriods.Sum(e => e.Westeds.Sum(e => e.Value)))))
                 .ForMember(dest => dest.TotalSalaryOfEmployees, src => src.MapFrom(src => src.BandLocationLeaders.Sum(e => e.BandLocationLeaderPeriods
@@ -319,22 +320,7 @@ namespace Arcation.EF.Helper
             // Extract Controller:
             CreateMap<Extract, AllExtracts>()
                 .ForMember(dest => dest.ExtractId, src => src.MapFrom(src => src.ExtractId))
-                .ForMember(dest => dest.ExtractName, src => src.MapFrom(src => src.ExtractName))
-                .ForMember(dest => dest.TotalPrice, src => src.MapFrom(src => src.ExtractRows.Sum(e => e.TotalPrice)))
-                .ForMember(dest => dest.ExtactRows, src => src.MapFrom(src => src.ExtractRows.Select(n => new ExtactRowsDto 
-                { 
-                    
-                    ExtractId = n.Extract.ExtractId,
-                    ExtractRowId = n.ExtractRowId,
-                    Estatement = n.Estatement,
-                    EstatementUnite = n.EstatementUnite,
-                    Quantity = n.Quantity,
-                    Percentage = n.Percentage,
-                    TotalPrice = n.TotalPrice,
-                    Note = n.Note,
-                    EstatementUnitePrice = n.EstatementUnitePrice
-
-                })));
+                .ForMember(dest => dest.ExtractName, src => src.MapFrom(src => src.ExtractName));
 
             // LeaderApp:
             CreateMap<BandLocationLeaderPeriod, PeriodsLeaderApp>()
