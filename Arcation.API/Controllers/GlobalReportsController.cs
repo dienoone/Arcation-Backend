@@ -18,6 +18,7 @@ namespace Arcation.API.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private string businessID;
 
         public GlobalReportsController(IUnitOfWork unitOfWork, IMapper mapper)
         {
@@ -30,28 +31,32 @@ namespace Arcation.API.Controllers
         public async Task<IActionResult> GetReports()
         {
             string businessId = HttpContext.GetBusinessId();
-            var entities = await _unitOfWork.Companies.GlobalReport(businessId);
-            var Ids = entities.Select(e => e.Id);
-            List<GlobalAccountMoney> preGlobalAccountMoney = new();
-            foreach (int id in Ids)
+            IEnumerable<Company> companies = await _unitOfWork.Companies.FindAllAsync(e => e.BusinessId == businessId && !e.IsDeleted);
+            if(companies != null)
             {
-                preGlobalAccountMoney.Add(AccountMoneyCompany(id));
+                var Ids = companies.Select(e => e.Id);
+                List<GlobalAccountMoney> preGlobalAccountMoney = new();
+                foreach (int id in Ids)
+                {
+                    preGlobalAccountMoney.Add(AccountMoneyCompany(id, businessId));
+                }
+
+                GlobalReport globalReport = new();
+                GlobalAccount globalAccount = new();
+
+                GlobalAccountWork globalAccountWork = await AccountWorkHelper(businessId);
+                GlobalAccountMoney globalAccountMoney = AccountMoneyHelper(preGlobalAccountMoney);
+                globalAccount.GlobalAccountMoney = globalAccountMoney;
+                globalAccount.GlobalAccountWork = globalAccountWork;
+
+                List<CompanyReprots> companyReprots = _mapper.Map<List<CompanyReprots>>(companies);
+
+                globalReport.Companies = companyReprots;
+                globalReport.globalAccount = globalAccount;
+
+                return Ok(globalReport);
             }
-            GlobalReport globalReport = new();
-
-            GlobalAccount globalAccount = new();
-
-            GlobalAccountWork globalAccountWork = await AccountWorkHelper(businessId);
-            GlobalAccountMoney globalAccountMoney = AccountMoneyHelper(preGlobalAccountMoney);
-            globalAccount.GlobalAccountMoney = globalAccountMoney;
-            globalAccount.GlobalAccountWork = globalAccountWork;
-
-            List<CompanyReprots> companyReprots = _mapper.Map<List<CompanyReprots>>(entities);
-
-            globalReport.Companies = companyReprots;
-            globalReport.globalAccount = globalAccount;
-
-            return Ok(globalReport);
+            return NoContent();
         }
 
         // api/GlobalReports/{companyId}
@@ -60,18 +65,23 @@ namespace Arcation.API.Controllers
         {
             if (companyId != null)
             {
-                GlobalReport globalReport = new();
-                GlobalAccount globalAccount = new();
-                var company = await _unitOfWork.Companies.SingleGlobalReport(HttpContext.GetBusinessId(), companyId);
+                businessID = HttpContext.GetBusinessId();
+                Company queryCompany = await _unitOfWork.Companies.FindAsync(e => e.Id == companyId && e.BusinessId == businessID && !e.IsDeleted);
+                if(queryCompany != null)
+                {
+                    GlobalReport globalReport = new();
+                    GlobalAccount globalAccount = new();
+                    
+                    globalAccount.GlobalAccountWork = await AccountWorkCompanyHelper(queryCompany, businessID);
+                    globalAccount.GlobalAccountMoney = AccountMoneyCompany(companyId, businessID);
 
-                globalAccount.GlobalAccountWork = await AccountWorkCompanyHelper(company);
-                globalAccount.GlobalAccountMoney = AccountMoneyCompany(companyId);
+                    IEnumerable<Location> locations = await _unitOfWork.Locations.FindAllAsync(e => e.BusinessId == businessID && e.CompanyId == queryCompany.Id && !e.IsDeleted);
+                    globalReport.Locations = _mapper.Map<IEnumerable<CompanyLocationsReports>>(locations);
+                    globalReport.globalAccount = globalAccount;
 
-                var locations = company.Locations;
-                globalReport.Locations = _mapper.Map<IEnumerable<CompanyLocationsReports>>(locations);
-                globalReport.globalAccount = globalAccount ;
-
-                return Ok(globalReport);
+                    return Ok(globalReport);
+                }
+                return NotFound();
             }
             return NotFound();
         }
@@ -82,18 +92,18 @@ namespace Arcation.API.Controllers
         {
             if (locationId != null)
             {
-                var location = await _unitOfWork.Locations.GetLocationReport(locationId, HttpContext.GetBusinessId());
+                businessID = HttpContext.GetBusinessId();
+                var location = await _unitOfWork.Locations.FindAsync(e => e.Id == locationId && e.BusinessId == businessID && !e.IsDeleted);
                 if (location != null)
                 {
                     GlobalReport globalReport = new();
                     GlobalAccount globalAccount = new();
-                    var preBands = location.BandLocations;
+                    var preBands = await _unitOfWork.BandLocations.FindAllAsync(e => e.LocationId == locationId && e.BusinessId == businessID && !e.IsDeleted, new[] { "Band" });
 
-                    globalAccount.GlobalAccountMoney = AccountMoneyLocation(locationId);
-                    globalAccount.GlobalAccountWork = await AccountWorkLocationHelper(location);
+                    globalAccount.GlobalAccountMoney = AccountMoneyLocation(locationId, businessID);
+                    globalAccount.GlobalAccountWork = await AccountWorkLocationHelper(location, businessID);
+
                     IEnumerable<CompanyLocationBandReports> bands = _mapper.Map<IEnumerable<CompanyLocationBandReports>>(preBands);
-
-
 
                     globalReport.Bands = bands;
                     globalReport.globalAccount = globalAccount;
@@ -111,14 +121,15 @@ namespace Arcation.API.Controllers
         {
             if (bandLocationId != null)
             {
-                var band = await _unitOfWork.BandLocations.GetBandLocationReport(bandLocationId, HttpContext.GetBusinessId());
+                businessID = HttpContext.GetBusinessId();
+                var band = await _unitOfWork.BandLocations.FindAsync(e => e.Id == bandLocationId && e.BusinessId == businessID && !e.IsDeleted);
                 if (band != null)
                 {
                     GlobalReport globalReport = new();
                     GlobalAccount globalAccount = new();
 
-                    globalAccount.GlobalAccountMoney = AccountMoneyBand(bandLocationId);
-                    globalAccount.GlobalAccountWork = await AccountWorkLocationBandHelper(band);
+                    globalAccount.GlobalAccountMoney = AccountMoneyBand(bandLocationId, businessID);
+                    globalAccount.GlobalAccountWork = await AccountWorkLocationBandHelper(band, businessID);
 
                     globalReport.globalAccount = globalAccount;
 
@@ -148,16 +159,16 @@ namespace Arcation.API.Controllers
 
             return globalAccountWork;
         }
-        private async Task<GlobalAccountWork> AccountWorkCompanyHelper(Company company)
+        private async Task<GlobalAccountWork> AccountWorkCompanyHelper(Company company, string businessId)
         {
             GlobalAccountWork globalAccountWork = new();
             List<EmployeeTypesDetail> employeeTypesDetails = new();
 
             globalAccountWork.CompanyName = company.Name;
-            globalAccountWork.NumberOfBands = company.Locations.Sum(e => e.BandLocations.Count);
-            globalAccountWork.NumberOfEmployees = company.Locations.Sum(e => e.BandLocations.Sum(e => e.BandLocationLeaders.Sum(e => e.BandLocationLeaderPeriods.Sum(e => e.BandLocationLeaderPeriodEmployees.Count))));
-            globalAccountWork.NumberOfLeaders = company.Locations.Sum(e => e.BandLocations.Sum(e => e.BandLocationLeaders.Count));
-            globalAccountWork.NumberOfLocations = company.Locations.Count;
+            globalAccountWork.NumberOfBands = _unitOfWork.BandLocations.NumberOfBandCompany(company.Id, businessId);
+            globalAccountWork.NumberOfEmployees = _unitOfWork.BandLocationLeaderPeriodEmployees.GetNumberOfEmployeesInCompany(company.Id, businessId);
+            globalAccountWork.NumberOfLeaders = _unitOfWork.BandLocationLeaders.NumberOfLeadersCompany(company.Id, businessId);
+            globalAccountWork.NumberOfLocations = _unitOfWork.Locations.NumberOfLocationCompany(company.Id, businessId);
 
             var types = await _unitOfWork.BandLocationLeaderPeriodEmployees.GetEmployeeTypesCompany(company.Id);
             var filterdList = new List<EmployeeType>();
@@ -174,7 +185,7 @@ namespace Arcation.API.Controllers
             {
                 EmployeeTypesDetail employeeTypesDetail = new();
                 employeeTypesDetail.TypeName = type.Type;
-                employeeTypesDetail.TotalEmployess = company.Locations.Sum(e => e.BandLocations.Sum(e => e.BandLocationLeaders.Sum(e => e.BandLocationLeaderPeriods.Sum(e => e.BandLocationLeaderPeriodEmployees.Count(e => e.Employee.Type.Type == type.Type)))));
+                employeeTypesDetail.TotalEmployess = _unitOfWork.BandLocationLeaderPeriodEmployees.GetNumberOfEmployeeTypeInCompany(company.Id , type.Id, businessId);
                 employeeTypesDetails.Add(employeeTypesDetail);
             }
 
@@ -182,17 +193,20 @@ namespace Arcation.API.Controllers
 
             return globalAccountWork;
         }
-        private async Task<GlobalAccountWork> AccountWorkLocationHelper(Location location)
+
+        private async Task<GlobalAccountWork> AccountWorkLocationHelper(Location location, string businessID)
         {
             List<EmployeeTypesDetail> employeeTypesDetails = new();
             GlobalAccountWork globalAccountWork = new();
 
-            globalAccountWork.NumberOfBands = location.BandLocations.Count;
-            globalAccountWork.NumberOfEmployees = location.BandLocations.Sum(e => e.BandLocationLeaders.Sum(e => e.BandLocationLeaderPeriods.Sum(e => e.BandLocationLeaderPeriodEmployees.Count)));
-            globalAccountWork.NumberOfLeaders = location.BandLocations.Sum(e => e.BandLocationLeaders.Count);
+            globalAccountWork.LocationName = location.LocationName;
+            globalAccountWork.NumberOfBands = await _unitOfWork.BandLocations.CountAsync(e => e.LocationId == location.Id && e.BusinessId == businessID && !e.IsDeleted);
+            globalAccountWork.NumberOfEmployees = _unitOfWork.BandLocationLeaderPeriodEmployees.GetNumberOfEmployeesInLocation(location.Id, businessID);
+            globalAccountWork.NumberOfLeaders = _unitOfWork.BandLocationLeaders.NumberOfLeadersLocation(location.Id, businessID);
             globalAccountWork.StartingDate = location.StartingDate;
             globalAccountWork.EndingDate = location.EndingDate;
-            globalAccountWork.CompanyName = location.Company.Name;
+            Location queryLocation = await _unitOfWork.Locations.FindAsync(e => e.Id == location.Id, new[] { "Company" });
+            globalAccountWork.CompanyName = queryLocation.Company.Name;
 
             var types = await _unitOfWork.BandLocationLeaderPeriodEmployees.GetEmployeeTypesLocation(location.Id);
             var filterdList = new List<EmployeeType>();
@@ -207,7 +221,7 @@ namespace Arcation.API.Controllers
             {
                 EmployeeTypesDetail employeeTypesDetail = new();
                 employeeTypesDetail.TypeName = type.Type;
-                employeeTypesDetail.TotalEmployess = location.BandLocations.Sum(e => e.BandLocationLeaders.Sum(e => e.BandLocationLeaderPeriods.Sum(e => e.BandLocationLeaderPeriodEmployees.Count(e => e.Employee.Type.Type == type.Type))));
+                employeeTypesDetail.TotalEmployess = _unitOfWork.BandLocationLeaderPeriodEmployees.GetNumberOfEmployeeTypeInLocation(location.Id, type.Id, businessID);
                 employeeTypesDetails.Add(employeeTypesDetail);
             }
 
@@ -216,13 +230,13 @@ namespace Arcation.API.Controllers
             return globalAccountWork;
         }
         // Need Some Date? ::
-        private async Task<GlobalAccountWork> AccountWorkLocationBandHelper(BandLocation band)
+        private async Task<GlobalAccountWork> AccountWorkLocationBandHelper(BandLocation band, string businessID)
         {
             List<EmployeeTypesDetail> employeeTypesDetails = new();
             GlobalAccountWork globalAccountWork = new();
 
-            globalAccountWork.NumberOfEmployees = band.BandLocationLeaders.Sum(e => e.BandLocationLeaderPeriods.Sum(e => e.BandLocationLeaderPeriodEmployees.Count));
-            globalAccountWork.NumberOfLeaders = band.BandLocationLeaders.Count;
+            globalAccountWork.NumberOfEmployees = _unitOfWork.BandLocationLeaderPeriodEmployees.GetNumberOfEmployeesInBand(band.Id, businessID);
+            globalAccountWork.NumberOfLeaders = _unitOfWork.BandLocationLeaders.NumberOfLeadersBand(band.Id, businessID);
 
             var types = await _unitOfWork.BandLocationLeaderPeriodEmployees.GetEmployeeTypesBand(band.Id);
             var filterdList = new List<EmployeeType>();
@@ -239,7 +253,7 @@ namespace Arcation.API.Controllers
             {
                 EmployeeTypesDetail employeeTypesDetail = new();
                 employeeTypesDetail.TypeName = type.Type;
-                employeeTypesDetail.TotalEmployess = band.BandLocationLeaders.Sum(e => e.BandLocationLeaderPeriods.Sum(e => e.BandLocationLeaderPeriodEmployees.Count(e => e.Employee.Type.Type == type.Type)));
+                employeeTypesDetail.TotalEmployess = _unitOfWork.BandLocationLeaderPeriodEmployees.GetNumberOfEmployeesInBand(band.Id, businessID);
                 employeeTypesDetails.Add(employeeTypesDetail);
             }
 
@@ -252,12 +266,17 @@ namespace Arcation.API.Controllers
             List<EmployeeTypesDetail> employeeTypesDetails = new();
             foreach (var type in types)
             {
-                EmployeeTypesDetail employeeTypesDetail = new EmployeeTypesDetail
+                int count = await _unitOfWork.Employees.CountAsync(e => e.TypeId == type.Id);
+                if (count > 0) 
                 {
-                    TypeName = type.Type,
-                    TotalEmployess = await _unitOfWork.Employees.CountAsync(e => e.TypeId == type.Id)
-                };
-                employeeTypesDetails.Add(employeeTypesDetail);
+                    EmployeeTypesDetail employeeTypesDetail = new EmployeeTypesDetail
+                    {
+                        TypeName = type.Type,
+                        TotalEmployess = count
+                    };
+                    employeeTypesDetails.Add(employeeTypesDetail);
+                }
+                           
             }
             return employeeTypesDetails;
         }
@@ -265,6 +284,7 @@ namespace Arcation.API.Controllers
         #endregion
 
         #region AccountMoney:
+
         private GlobalAccountMoney AccountMoneyHelper(List<GlobalAccountMoney> globalAccounts)
         {
             GlobalAccountMoney globalAccountMoney = new();
@@ -284,34 +304,36 @@ namespace Arcation.API.Controllers
 
             return globalAccountMoney;
         }
-        private GlobalAccountMoney AccountMoneyCompany(int? companyId)
+        private GlobalAccountMoney AccountMoneyCompany(int? companyId, string businessId)
         {
             GlobalAccountMoney globalAccountMoney = new();
-            globalAccountMoney.TotalBills = _unitOfWork.Bills.GetTotalCompany(companyId);
-            globalAccountMoney.TotalExtracts = _unitOfWork.ExtractRows.GetTotalCompany(companyId);
-            globalAccountMoney.TotalIncomes = _unitOfWork.Incomes.GetTotalCompany(companyId);
-            globalAccountMoney.TotalPayied = _unitOfWork.BandLocationLeaderPeriods.GetTotalCompanyPaied(companyId) + _unitOfWork.BandLocationLeaderPeriodEmployeePeriods.GetTotalCompanyPaied(companyId) + _unitOfWork.Attendances.GetTotalCompanyBorrow(companyId) + _unitOfWork.BandLocationLeaderPeriodEmployeePeriodAttendances.GetTotalCompanyBorrow(companyId);
-            globalAccountMoney.TotalSalaryOFEmployees = _unitOfWork.BandLocationLeaderPeriodEmployeePeriodAttendances.GetTotalCompanyHours(companyId) * _unitOfWork.BandLocationLeaderPeriodEmployeePeriods.GetTotalCompanySalary(companyId);
-            globalAccountMoney.TotalSalaryOFLeaders = _unitOfWork.Attendances.GetTotalCompanyHours(companyId) * _unitOfWork.BandLocationLeaderPeriods.GetTotalCompanySalary(companyId);
-            globalAccountMoney.TotalWesteds = _unitOfWork.BLWesteds.GetTotalCompany(companyId) + _unitOfWork.LeaderWesteds.GetTotalCompany(companyId);
-            globalAccountMoney.TotalTransictions = _unitOfWork.LeaderTransactions.GetTotalCompany(companyId);
+            globalAccountMoney.TotalBills = _unitOfWork.Bills.GetCompanyGlobalReport(companyId, businessId);
+            globalAccountMoney.TotalExtracts = _unitOfWork.Extracts.GetCompanyGlobalReport(companyId, businessId);
+            globalAccountMoney.TotalIncomes = _unitOfWork.Incomes.GetCompanyGlobalReport(companyId, businessId);
+            globalAccountMoney.TotalPayied = _unitOfWork.Attendances.GetCompanyGlobalReportPaied(companyId, businessId)
+                + _unitOfWork.BandLocationLeaderPeriodEmployeePeriodAttendances.GetCompanyGlobalReportPaied(companyId, businessId);
+            globalAccountMoney.TotalSalaryOFEmployees = _unitOfWork.BandLocationLeaderPeriodEmployeePeriodAttendances.GetCompanyGlobalReportSalary(companyId, businessId);
+            globalAccountMoney.TotalSalaryOFLeaders = _unitOfWork.Attendances.GetCompanyGlobalReportSalary(companyId, businessId);
+            globalAccountMoney.TotalWesteds = _unitOfWork.BLWesteds.GetCompanyGlobalReport(companyId, businessId) + _unitOfWork.LeaderWesteds.GetCompanyGlobalReport(companyId,businessId);
+            globalAccountMoney.TotalTransictions = _unitOfWork.LeaderTransactions.GetCompanyGlobalReport(companyId, businessId);
             globalAccountMoney.GlobalSalary = globalAccountMoney.TotalSalaryOFEmployees + globalAccountMoney.TotalSalaryOFLeaders;
             globalAccountMoney.RemainderIncome = globalAccountMoney.TotalExtracts - globalAccountMoney.TotalIncomes;
             globalAccountMoney.RemainderSalary = globalAccountMoney.GlobalSalary - globalAccountMoney.TotalPayied;
             globalAccountMoney.Profit = globalAccountMoney.TotalExtracts - globalAccountMoney.TotalWesteds - globalAccountMoney.TotalBills - globalAccountMoney.GlobalSalary;
             return globalAccountMoney;
         }
-        private GlobalAccountMoney AccountMoneyBand(int? bandId)
+        private GlobalAccountMoney AccountMoneyBand(int? bandId, string businessId)
         {
             GlobalAccountMoney globalAccountMoney = new();
-            globalAccountMoney.TotalBills = _unitOfWork.Bills.GetTotalBand(bandId);
-            globalAccountMoney.TotalExtracts = _unitOfWork.ExtractRows.GetTotalBand(bandId);
-            globalAccountMoney.TotalIncomes = _unitOfWork.Incomes.GetTotalBand(bandId);
-            globalAccountMoney.TotalPayied = _unitOfWork.BandLocationLeaderPeriods.GetTotalBandPaied(bandId) + _unitOfWork.BandLocationLeaderPeriodEmployeePeriods.GetTotalBandPaied(bandId) + _unitOfWork.Attendances.GetTotalBandBorrow(bandId) + _unitOfWork.BandLocationLeaderPeriodEmployeePeriodAttendances.GetTotalBandBorrow(bandId);
-            globalAccountMoney.TotalSalaryOFEmployees = _unitOfWork.BandLocationLeaderPeriodEmployeePeriodAttendances.GetTotalBandHours(bandId) * _unitOfWork.BandLocationLeaderPeriodEmployeePeriods.GetTotalBandSalary(bandId);
-            globalAccountMoney.TotalSalaryOFLeaders = _unitOfWork.Attendances.GetTotalBandHours(bandId) * _unitOfWork.BandLocationLeaderPeriods.GetTotalBandSalary(bandId);
-            globalAccountMoney.TotalWesteds = _unitOfWork.BLWesteds.GetTotalBand(bandId) + _unitOfWork.LeaderWesteds.GetTotalBand(bandId);
-            globalAccountMoney.TotalTransictions = _unitOfWork.LeaderTransactions.GetTotalBand(bandId);
+            globalAccountMoney.TotalBills = _unitOfWork.Bills.GetBandGlobalReport(bandId, businessId);
+            globalAccountMoney.TotalExtracts = _unitOfWork.Extracts.GetBandGlobalReport(bandId, businessId);
+            globalAccountMoney.TotalIncomes = _unitOfWork.Incomes.GetBandGlobalReport(bandId, businessId);
+            globalAccountMoney.TotalPayied = _unitOfWork.Attendances.GetBandGlobalReportPaied(bandId, businessId) 
+                + _unitOfWork.BandLocationLeaderPeriodEmployeePeriodAttendances.GetBandGlobalReportPaied(bandId, businessId);
+            globalAccountMoney.TotalSalaryOFEmployees = _unitOfWork.BandLocationLeaderPeriodEmployeePeriodAttendances.GetBandGlobalReportSalary(bandId, businessId);
+            globalAccountMoney.TotalSalaryOFLeaders = _unitOfWork.Attendances.GetBandGlobalReportSalary(bandId, businessId);
+            globalAccountMoney.TotalWesteds = _unitOfWork.BLWesteds.GetBandGlobalReport(bandId, businessId) + _unitOfWork.LeaderWesteds.GetBandGlobalReport(bandId, businessId);
+            globalAccountMoney.TotalTransictions = _unitOfWork.LeaderTransactions.GetBandGlobalReport(bandId, businessId);
             globalAccountMoney.GlobalSalary = globalAccountMoney.TotalSalaryOFEmployees + globalAccountMoney.TotalSalaryOFLeaders;
             globalAccountMoney.RemainderIncome = globalAccountMoney.TotalExtracts - globalAccountMoney.TotalIncomes;
             globalAccountMoney.RemainderSalary = globalAccountMoney.GlobalSalary - globalAccountMoney.TotalPayied;
@@ -319,16 +341,17 @@ namespace Arcation.API.Controllers
 
             return globalAccountMoney;
         }
-        private GlobalAccountMoney AccountMoneyLocation(int? locationId)
+        private GlobalAccountMoney AccountMoneyLocation(int? locationId, string businessId)
         {
             GlobalAccountMoney globalAccountMoney = new();
-            globalAccountMoney.TotalBills = _unitOfWork.Bills.GetTotalLocation(locationId);
-            globalAccountMoney.TotalExtracts = _unitOfWork.ExtractRows.GetTotalLocation(locationId);
-            globalAccountMoney.TotalIncomes = _unitOfWork.Incomes.GetTotalLocation(locationId);
-            globalAccountMoney.TotalPayied = _unitOfWork.BandLocationLeaderPeriods.GetTotalLocationPaied(locationId) + _unitOfWork.BandLocationLeaderPeriodEmployeePeriods.GetTotalLocationPaied(locationId) + _unitOfWork.Attendances.GetTotalLocationBorrow(locationId) + _unitOfWork.BandLocationLeaderPeriodEmployeePeriodAttendances.GetTotalLocationBorrow(locationId);
-            globalAccountMoney.TotalSalaryOFEmployees = _unitOfWork.BandLocationLeaderPeriodEmployeePeriodAttendances.GetTotalLocationHours(locationId) * _unitOfWork.BandLocationLeaderPeriodEmployeePeriods.GetTotalLocationSalary(locationId);
-            globalAccountMoney.TotalSalaryOFLeaders = _unitOfWork.Attendances.GetTotalLocationHours(locationId) * _unitOfWork.BandLocationLeaderPeriods.GetTotalLocationSalary(locationId);
-            globalAccountMoney.TotalWesteds = _unitOfWork.BLWesteds.GetTotalLocation(locationId) + _unitOfWork.LeaderWesteds.GetTotalLocation(locationId);
+            globalAccountMoney.TotalBills = _unitOfWork.Bills.GetLocationGlobalReport(locationId, businessId);
+            globalAccountMoney.TotalExtracts = _unitOfWork.Extracts.GetLocationGlobalReport(locationId, businessId);
+            globalAccountMoney.TotalIncomes = _unitOfWork.Incomes.GetLocationGlobalReport(locationId, businessId);
+            globalAccountMoney.TotalPayied = _unitOfWork.Attendances.GetBandGlobalReportPaied(locationId, businessId)
+                + _unitOfWork.BandLocationLeaderPeriodEmployeePeriodAttendances.GetLocationGlobalReportPaied(locationId, businessId);
+            globalAccountMoney.TotalSalaryOFEmployees = _unitOfWork.BandLocationLeaderPeriodEmployeePeriodAttendances.GetLocationGlobalReportSalary(locationId, businessId);
+            globalAccountMoney.TotalSalaryOFLeaders = _unitOfWork.Attendances.GetLocationGlobalReportSalary(locationId, businessId);
+            globalAccountMoney.TotalWesteds = _unitOfWork.BLWesteds.GetLocationGlobalReport(locationId, businessId) + _unitOfWork.LeaderWesteds.GetLocationGlobalReport(locationId, businessId);
             globalAccountMoney.TotalTransictions = _unitOfWork.LeaderTransactions.GetTotalLocation(locationId);
             globalAccountMoney.GlobalSalary = globalAccountMoney.TotalSalaryOFEmployees + globalAccountMoney.TotalSalaryOFLeaders;
             globalAccountMoney.RemainderIncome = globalAccountMoney.TotalExtracts - globalAccountMoney.TotalIncomes;
@@ -337,6 +360,9 @@ namespace Arcation.API.Controllers
 
             return globalAccountMoney;
         }
+
         #endregion
+
+        
     }
 }

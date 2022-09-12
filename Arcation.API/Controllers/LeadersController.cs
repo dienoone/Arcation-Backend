@@ -47,7 +47,7 @@ namespace Arcation.API.Controllers
 
         // api/Leaders => Create Leader And Create user at the same time
         [HttpPost]
-        public async Task<IActionResult> CreateLeader([FromForm] AddLeaderDto model)
+        public async Task<IActionResult> CreateLeader([FromBody] AddLeaderDto model)
         {
             if (ModelState.IsValid)
             {
@@ -70,46 +70,6 @@ namespace Arcation.API.Controllers
                         CreatedBy = HttpContext.GetUserId(),
                         IsDeleted = false
                     };
-
-                    #region
-                    // ----- This Part Related To Photos ---------
-                    string photo = "photo";
-                    string IdentityPhoto = "IdentityPhoto";
-                    if (model.Photo != null)
-                    {
-                        if (model.Photo.Length > 0)
-                        {
-                            photo = await _imageHandler.UploadImage(model.Photo);
-                            if (photo == "Invalid image file") return BadRequest();
-                        }
-                    }
-                    if (model.IdentityPhoto != null)
-                    {
-                        if (model.IdentityPhoto.Length > 0)
-                        {
-                            IdentityPhoto = await _imageHandler.UploadImage(model.IdentityPhoto);
-                            if (IdentityPhoto == "Invalid image file") return BadRequest();
-                        }
-                    }
-                    if (photo != "photo")
-                    {
-                        leader.Photo = _appURL.AppUrl + photo;
-                    }
-                    else
-                    {
-                        leader.Photo = null;
-                    }
-                    if (IdentityPhoto != "IdentityPhoto")
-                    {
-                        leader.IdentityPhoto = _appURL.AppUrl + IdentityPhoto;
-                    }
-                    else
-                    {
-                        leader.IdentityPhoto = null;
-                    }
-                    // --------------- End Region ----------------
-                    #endregion
-
                     await _unitOfWork.Leaders.AddAsync(leader);
                     if (await _unitOfWork.Complete())
                     {
@@ -124,7 +84,7 @@ namespace Arcation.API.Controllers
 
         // api/leaders/{id} => Update Leader
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateLeader([FromRoute] string id, [FromForm] UpdateLeaderDto dto)
+        public async Task<IActionResult> UpdateLeader([FromRoute] string id, [FromBody] UpdateLeaderDto dto)
         {
             if (ModelState.IsValid)
             {
@@ -141,45 +101,6 @@ namespace Arcation.API.Controllers
                             leader.Passwrod = dto.Password;
                             leader.Phone = dto.PhoneNumber;
                             leader.Salary = dto.Salary;
-
-                            #region Photo:
-                            // ----- This Part Related To Photos ---------
-                            string photo = "photo";
-                            string IdentityPhoto = "IdentityPhoto";
-                            if (dto.Photo != null)
-                            {
-                                if (dto.Photo.Length > 0)
-                                {
-                                    photo = await _imageHandler.UploadImage(dto.Photo);
-                                    if (photo == "Invalid image file") return BadRequest();
-                                }
-                            }
-                            if (dto.IdentityPhoto != null)
-                            {
-                                if (dto.IdentityPhoto.Length > 0)
-                                {
-                                    IdentityPhoto = await _imageHandler.UploadImage(dto.IdentityPhoto);
-                                    if (IdentityPhoto == "Invalid image file") return BadRequest();
-                                }
-                            }
-                            if (photo != "photo")
-                            {
-                                leader.Photo = _appURL.AppUrl + photo;
-                            }
-                            else
-                            {
-                                leader.Photo = null;
-                            }
-                            if (IdentityPhoto != "IdentityPhoto")
-                            {
-                                leader.IdentityPhoto = _appURL.AppUrl + IdentityPhoto;
-                            }
-                            else
-                            {
-                                leader.IdentityPhoto = null;
-                            }
-                            // --------------- End Region ----------------
-                            #endregion
 
                             // Update Users Tabels:
                             user.FirstName = dto.LeaderName;

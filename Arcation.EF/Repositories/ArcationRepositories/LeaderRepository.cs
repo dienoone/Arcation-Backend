@@ -42,5 +42,6 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .Include(e => e.BandLocationLeaders).ThenInclude(e => e.BandLocation).ThenInclude(e => e.Location)
                 .FirstOrDefaultAsync(e => e.Id == LeaderId && e.BusinessId == BusinessId);
         }
+
     }
 }

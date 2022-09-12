@@ -503,8 +503,177 @@ namespace Arcation.API.Controllers
             return NotFound();
         }
 
+        // api/Search/AttendanceEmployees/{attendanceID}/Employee/{name}
+        [HttpGet("AttendanceEmployees/{attendanceID}/Employee/{name}")]
+        public async Task<IActionResult> SearchInAttendance([FromRoute] int? attendanceID, [FromRoute] string name)
+        {
+            if (attendanceID != null)
+            {
+                BusinessId = HttpContext.GetBusinessId();
+                Attendance attendanceExist = await _unitOfWork.Attendances.FindAsync(e => e.Id == attendanceID && e.BusinessId == BusinessId && !e.IsDeleted);
+                if (attendanceExist != null)
+                {
+                    if (name != null)
+                    {
+                        Attendance entities = await _unitOfWork.Attendances.GetSearchAttendance(attendanceID, name, BusinessId);
+                        List<AttendanceEmployeeDto> attendanceDto = AttendanceHelper(entities);
+                        return Ok(attendanceDto);
+                    }
+                    else
+                    {
+                        Attendance attendance = await _unitOfWork.Attendances.GetAttendance(attendanceID, attendanceExist.BandLocationLeaderPeriodId);
+                        List<AttendanceEmployeeDto> attendanceDto = AttendanceHelper(attendance);
+                        return Ok(attendanceDto);
+                    }
+                }
+                return NotFound();
+            }
+            return NotFound();
+        }
+
         #endregion
 
+        #region Leaders:
 
+        // api/Search/Leader/{name}
+        [HttpGet("Leader/{name}")]
+        public async Task<IActionResult> SearchLeader([FromRoute] string name)
+        {
+            BusinessId = HttpContext.GetBusinessId();
+            if (name != null)
+            {
+                IEnumerable<Leader> entities = await _unitOfWork.Leaders.FindAllAsync(e => !e.IsDeleted && e.BusinessId == BusinessId && e.Name.Contains(name));
+                return Ok(_mapper.Map<IEnumerable<LeadersPageDto>>(entities));
+            }
+            else
+            {
+                IEnumerable<Leader> entities = await _unitOfWork.Leaders.FindAllAsync(l => !l.IsDeleted && l.BusinessId == BusinessId);
+                return Ok(_mapper.Map<IEnumerable<LeadersPageDto>>(entities));
+            }
+        }
+
+        // api/Search/Employee/{name}
+        [HttpGet("Employee/{name}")]
+        public async Task<IActionResult> SearchEmployee([FromRoute] string name)
+        {
+            BusinessId = HttpContext.GetBusinessId();
+            if (name != null)
+            {
+                IEnumerable<Employee> entities = await _unitOfWork.Employees.GetSearch(name, BusinessId);
+                return Ok(_mapper.Map<IEnumerable<EmployeePageDto>>(entities));
+            }
+            else
+            {
+                IEnumerable<Employee> entities = await _unitOfWork.Employees.GetAllIncludeTypes(HttpContext.GetBusinessId());
+                return Ok(_mapper.Map<IEnumerable<EmployeePageDto>>(entities));
+                
+            }
+        }
+
+        #endregion
+
+        #region Settings:
+
+        // api/Search/Tools/{name}
+        [HttpGet("Tools/{name}")]
+        public async Task<IActionResult> SearchTools([FromRoute] string name)
+        {
+            BusinessId = HttpContext.GetBusinessId();
+            if (name != null)
+            {
+                IEnumerable<Tool> entities = await _unitOfWork.Tools.FindAllAsync(e => e.BusinessId == BusinessId && !e.IsDeleted && e.ToolName.Contains(name));
+                return Ok(_mapper.Map<IEnumerable<ToolViewModel>>(entities));
+            }
+            else
+            {
+                IEnumerable<Tool> entities = await _unitOfWork.Tools.FindAllAsync(e => e.BusinessId == BusinessId && !e.IsDeleted);
+                return Ok(_mapper.Map<IEnumerable<ToolViewModel>>(entities));
+            }
+        }
+
+        // api/Search/EmployeeTypes/{name}
+        [HttpGet("EmployeeTypes/{name}")]
+        public async Task<IActionResult> SearchEmployeeTypes([FromRoute] string name)
+        {
+            BusinessId = HttpContext.GetBusinessId();
+            if (name != null)
+            {
+                IEnumerable<EmployeeType> entities = await _unitOfWork.EmployeeTypes.FindAllAsync(e => e.BusinessId == BusinessId && !e.IsDeleted && e.Type.Contains(name));
+                var types = _mapper.Map<IEnumerable<EmployeeTypeDto>>(entities);
+                foreach (var type in types)
+                {
+                    type.Count = await _unitOfWork.Employees.CountAsync(e => e.TypeId == type.Id && e.BusinessId == HttpContext.GetBusinessId() && !e.IsDeleted);
+                }
+                return Ok(types);
+            }
+            else
+            {
+                IEnumerable<EmployeeType> entities = await _unitOfWork.EmployeeTypes.FindAllAsync(e => e.BusinessId == BusinessId && !e.IsDeleted);
+                var types = _mapper.Map<IEnumerable<EmployeeTypeDto>>(entities);
+                foreach (var type in types)
+                {
+                    type.Count = await _unitOfWork.Employees.CountAsync(e => e.TypeId == type.Id && e.BusinessId == HttpContext.GetBusinessId() && !e.IsDeleted);
+                }
+                return Ok(types);
+            }
+        }
+
+        // api/Search/Band/{name}
+        [HttpGet("Band/{name}")]
+        public async Task<IActionResult> SearchBands([FromRoute] string name)
+        {
+            BusinessId = HttpContext.GetBusinessId();
+            if (name != null)
+            {
+                IEnumerable<Band> entities = await _unitOfWork.Bands.FindAllAsync(e => e.BusinessId == BusinessId && !e.IsDeleted && e.BandName.Contains(name));
+                return Ok(_mapper.Map<IEnumerable<BandViewModel>>(entities));
+            }
+            else
+            {
+                IEnumerable<Band> entities = await _unitOfWork.Bands.FindAllAsync(e => e.BusinessId == BusinessId && !e.IsDeleted);
+                return Ok(_mapper.Map<IEnumerable<BandViewModel>>(entities));
+            }
+        }
+
+        #endregion
+
+        #region Helpers:
+
+        private List<AttendanceEmployeeDto> AttendanceHelper(Attendance attendance)
+        {
+            List<AttendanceEmployeeDto> attendanceDto = new();
+
+            AttendanceEmployeeDto leaderDto = new AttendanceEmployeeDto
+            {
+                BandLocationLeaderPeriodEmployeePeriodAttendaceId = attendance.BandLocationLeaderPeriodId,
+                EmployeeName = attendance.BandLocationLeaderPeriod.BandLocationLeader.Leader.Name,
+                EmployeeType = "Leader",
+                AttendanceState = attendance.AttendanceState,
+                WorkingHours = attendance.WorkingHours,
+                BorrowValue = attendance.BorrowValue,
+                IsLeader = true
+            };
+
+            attendanceDto.Add(leaderDto);
+
+            foreach (var employee in attendance.BandLocationLeaderPeriodEmployeePeriodAttendances)
+            {
+                AttendanceEmployeeDto dto = new AttendanceEmployeeDto
+                {
+                    BandLocationLeaderPeriodEmployeePeriodAttendaceId = employee.Id,
+                    EmployeeName = employee.BandLocationLeaderPeriodEmployeePeriod.BandLocationLeaderPeriodEmployee.Employee.Name,
+                    EmployeeType = employee.BandLocationLeaderPeriodEmployeePeriod.BandLocationLeaderPeriodEmployee.Employee.Type.Type,
+                    AttendanceState = employee.State,
+                    BorrowValue = employee.BorrowValue,
+                    WorkingHours = employee.WorkingHours,
+                    IsLeader = false
+                };
+                attendanceDto.Add(dto);
+            }
+
+            return attendanceDto;
+        }
+
+        #endregion
     }
 }

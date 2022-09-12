@@ -11,8 +11,7 @@ namespace Arcation.Core.ViewModels.ArcationViewModel
     {
         public int Id { get; set; }
         public string Type { get; set; }
-
-        // List OF Employee 
+        public int Count { get; set; }
     }
     public class AddEmployeeTypeDto : UpdateEmployeeTypeDto
     {

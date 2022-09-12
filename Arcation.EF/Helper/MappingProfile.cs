@@ -294,6 +294,7 @@ namespace Arcation.EF.Helper
             // Tool Controller : 
             CreateMap<Tool, ToolViewModel>()
                 .ForMember(dest => dest.ToolName, src => src.MapFrom(src => src.ToolName))
+                .ForMember(dest => dest.Id, src => src.MapFrom(src => src.ToolId))
                 .ForMember(dest => dest.ToolCount, src => src.MapFrom(src => src.Count));
 
             // Extract Controller:

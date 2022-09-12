@@ -16,5 +16,7 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
         Task<IEnumerable<Location>> LocationRelatedToEmployee(int? EmployeeId, string businessId);
         Task<IEnumerable<Location>> LocaionsWithBandsRelatedToLeader(string leaderId, string BusinessId);
         Task<Location> GetLocationReport(int? locationId, string businessId);
+
+        int NumberOfLocationCompany(int? companyId, string busniessId);
     }
 }

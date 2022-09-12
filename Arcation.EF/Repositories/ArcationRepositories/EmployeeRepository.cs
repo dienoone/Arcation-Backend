@@ -24,6 +24,13 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .Where(e => e.BusinessId == businessId && !e.IsDeleted && !e.Type.IsDeleted).ToListAsync();
         }
 
+        public async Task<IEnumerable<Employee>> GetSearch(string name ,string businessId)
+        {
+            return await _context.Employees
+                .Include(e => e.Type)
+                .Where(e => e.BusinessId == businessId && !e.IsDeleted && !e.Type.IsDeleted && e.Name.Contains(name)).ToListAsync();
+        }
+
         public async Task<Employee> GetEmployeeIncludeTypes(int? Id,string businessId)
         {
             return await _context.Employees

@@ -72,5 +72,12 @@ namespace Arcation.EF.Repositories.ArcationRepositories
 
         }
 
+        public int NumberOfLocationCompany(int? companyId, string busniessId)
+        {
+            return _context.Locations
+                .Where(e => e.CompanyId == companyId && e.BusinessId == busniessId && !e.IsDeleted)
+                .Count();
+        }
+
     }
 }

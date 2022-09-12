@@ -92,11 +92,48 @@ namespace Arcation.EF.Repositories.ArcationRepositories
 
         }
 
+
         public int GetBandLocationInnerReport(int? bandLocationId, int? typeId ,string businessId)
         {
             return _context.BandLocationLeaderPeriodEmployees
                 .Where(e => e.BusinessId == businessId && !e.IsDeleted && e.BandLocationLeaderPeriod.BandLocationLeader.BandLocationId == bandLocationId)
                 .Count(e => e.BandLocationLeaderPeriodEmployeePeriods.Any(e => e.BandLocationLeaderPeriodEmployee.Employee.TypeId == typeId));
+        }
+        public int GetNumberOfEmployeesInCompany(int? companyId, string businessId)
+        {
+            return _context.BandLocationLeaderPeriodEmployees
+                .Where(e => e.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.Location.CompanyId == companyId && !e.IsDeleted && e.BusinessId == businessId)
+                .Count();
+        }
+        public int GetNumberOfEmployeesInLocation(int? locationId, string businessId)
+        {
+            return _context.BandLocationLeaderPeriodEmployees
+                .Where(e => e.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.LocationId == locationId && !e.IsDeleted && e.BusinessId == businessId)
+                .Count();
+        }
+        public int GetNumberOfEmployeesInBand(int? bandId, string businessId)
+        {
+            return _context.BandLocationLeaderPeriodEmployees
+                .Where(e => e.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.Id == bandId && !e.IsDeleted && e.BusinessId == businessId)
+                .Count();
+        }
+        public int GetNumberOfEmployeeTypeInCompany(int? companyId, int? typeId, string businessId)
+        {
+            return _context.BandLocationLeaderPeriodEmployees
+                .Where(e => e.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.Location.CompanyId == companyId && e.Employee.TypeId == typeId && e.BusinessId == businessId && !e.IsDeleted)
+                .Count();
+        }
+        public int GetNumberOfEmployeeTypeInLocation(int? locationId, int? typeId, string businessId)
+        {
+            return _context.BandLocationLeaderPeriodEmployees
+                .Where(e => e.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.LocationId == locationId && e.Employee.TypeId == typeId && e.BusinessId == businessId && !e.IsDeleted)
+                .Count();
+        }
+        public int GetNumberOfEmployeeTypeInBand(int? bandId, int? typeId, string businessId)
+        {
+            return _context.BandLocationLeaderPeriodEmployees
+                .Where(e => e.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.Id == bandId && e.Employee.TypeId == typeId && e.BusinessId == businessId && !e.IsDeleted)
+                .Count();
         }
     }
 }

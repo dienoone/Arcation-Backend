@@ -70,6 +70,27 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .FirstOrDefaultAsync();
         }
 
+        public int NumberOfLeadersCompany(int? companyId, string businessId)
+        {
+            return _context.BandLocationLeaders
+                .Where(e => e.BandLocation.Location.CompanyId == companyId && !e.IsDeleted && e.BusinessId == businessId)
+                .Count();
+        }
+
+        public int NumberOfLeadersLocation(int? locationId, string businessId)
+        {
+            return _context.BandLocationLeaders
+                .Where(e => e.BandLocation.LocationId == locationId && !e.IsDeleted && e.BusinessId == businessId)
+                .Count();
+        }
+
+        public int NumberOfLeadersBand(int? bandId, string businessId)
+        {
+            return _context.BandLocationLeaders
+                .Where(e => e.BandLocation.Id == bandId && !e.IsDeleted && e.BusinessId == businessId)
+                .Count();
+        }
+
 
     }
 }

@@ -35,7 +35,6 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .Include(e => e.BandLocationLeaderPeriodEmployeePeriodAttendances.Where(e => !e.IsDeleted))
                 .FirstOrDefaultAsync(e => e.Id == attendanceId);
         }
-
         public async Task<Attendance> GetAttendance(int? attendanceId, int? bandLocationLeaderPeriodId)
         {
             return await _context.Attendances
@@ -47,7 +46,6 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .Include(e => e.BandLocationLeaderPeriod.BandLocationLeader.Leader)
                 .FirstOrDefaultAsync(e => e.Id == attendanceId && e.BandLocationLeaderPeriodId == bandLocationLeaderPeriodId);
         }
-
         public async Task<Attendance> GetSearchAttendance(int? attendanceId, string name, string businessID)
         {
             return await _context.Attendances
@@ -66,35 +64,30 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .Where(e => e.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.Location.CompanyId == companyId)
                 .Sum(e => e.BorrowValue);
         }
-
         public double GetTotalBandBorrow(int? bandId)
         {
             return _context.Attendances
                 .Where(e => e.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.Id == bandId)
                 .Sum(e => e.BorrowValue);
         }
-
         public double GetTotalLocationBorrow(int? locationId)
         {
             return _context.Attendances
                 .Where(e => e.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.LocationId == locationId)
                 .Sum(e => e.BorrowValue);
         }
-
         public double GetTotalCompanyHours(int? companyId)
         {
             return _context.Attendances
                 .Where(e => e.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.Location.CompanyId == companyId)
                 .Sum(e => e.WorkingHours);
         }
-
         public double GetTotalBandHours(int? bandId)
         {
             return _context.Attendances
                 .Where(e => e.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.Id == bandId)
                 .Sum(e => e.WorkingHours);
         }
-
         public double GetTotalLocationHours(int? locationId)
         {
             return _context.Attendances
@@ -108,12 +101,56 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .Where(e => e.BusinessId == businessId && !e.IsDeleted && e.BandLocationLeaderPeriod.BandLocationLeader.BandLocationId == bandLocationId)
                 .Sum(e => e.WorkingHours * e.BandLocationLeaderPeriod.LeaderSalary);
         }
-
         public double GetBandLocationInnerReportPaied(int? bandLocationId, string businessId)
         {
             return _context.Attendances
                 .Where(e => e.BusinessId == businessId && !e.IsDeleted && e.BandLocationLeaderPeriod.BandLocationLeader.BandLocationId == bandLocationId)
                 .Sum(e => e.BorrowValue + e.BandLocationLeaderPeriod.TotalPaied);
+        }
+
+
+        public double GetCompanyGlobalReportSalary(int? companyId, string busiessId)
+        {
+            return _context.Attendances
+                .Where(e => e.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.Location.CompanyId == companyId && !e.IsDeleted && e.BusinessId == busiessId)
+                .Sum(e => e.WorkingHours * e.BandLocationLeaderPeriod.LeaderSalary);
+
+        }
+        public double GetLocationGlobalReportSalary(int? locationId, string busiessId)
+        {
+            return _context.Attendances
+                .Where(e => e.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.LocationId == locationId && !e.IsDeleted && e.BusinessId == busiessId)
+                .Sum(e => e.WorkingHours * e.BandLocationLeaderPeriod.LeaderSalary);
+
+        }
+        public double GetBandGlobalReportSalary(int? bandId, string busiessId)
+        {
+            return _context.Attendances
+                .Where(e => e.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.Id == bandId && !e.IsDeleted && e.BusinessId == busiessId)
+                .Sum(e => e.WorkingHours * e.BandLocationLeaderPeriod.LeaderSalary);
+
+        }
+
+        public double GetCompanyGlobalReportPaied(int? companyId, string busiessId)
+        {
+            return _context.Attendances
+                .Where(e => e.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.Location.CompanyId == companyId && !e.IsDeleted && e.BusinessId == busiessId)
+                .Sum(e => e.BorrowValue + e.BandLocationLeaderPeriod.TotalPaied);
+
+        }
+        public double GetLocationGlobalReportPaied(int? locationId, string busiessId)
+        {
+            return _context.Attendances
+                .Where(e => e.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.LocationId == locationId && !e.IsDeleted && e.BusinessId == busiessId)
+                .Sum(e => e.BorrowValue + e.BandLocationLeaderPeriod.TotalPaied);
+
+        }
+        public double GetBandGlobalReportPaied(int? bandId, string busiessId)
+        {
+            return _context.Attendances
+                .Where(e => e.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.Id == bandId && !e.IsDeleted && e.BusinessId == busiessId)
+                .Sum(e => e.BorrowValue + e.BandLocationLeaderPeriod.TotalPaied);
+
         }
 
     }

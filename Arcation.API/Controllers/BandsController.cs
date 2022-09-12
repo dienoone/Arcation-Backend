@@ -65,7 +65,7 @@ namespace Arcation.API.Controllers
         {
             if (ModelState.IsValid)
             {
-                Band isNameExist = await _unitOfWork.Bands.FindAsync(b => b.BandName == model.BandName && b.BusinessId == HttpContext.GetBusinessId());
+                Band isNameExist = await _unitOfWork.Bands.FindAsync(b => b.BandName == model.BandName && b.BusinessId == HttpContext.GetBusinessId() && !b.IsDeleted);
                 if(isNameExist == null)
                 {
                     Band band = new();

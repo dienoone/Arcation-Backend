@@ -3,6 +3,7 @@ using Arcation.Core;
 using Arcation.Core.Models.ArcationModels.Main;
 using Arcation.Core.ViewModels.ArcationViewModel;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -14,6 +15,7 @@ namespace Arcation.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class ToolsController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -37,7 +39,11 @@ namespace Arcation.API.Controllers
                     Tool newTool = new Tool
                     {
                         ToolName = model.ToolName,
-                        Count = model.ToolCount
+                        Count = model.ToolCount,
+                        BusinessId = HttpContext.GetBusinessId(),
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = HttpContext.GetUserId(),
+                        IsDeleted = false
                     };
 
                     var result = await _unitOfWork.Tools.AddAsync(newTool);
@@ -47,6 +53,7 @@ namespace Arcation.API.Controllers
                         {
                             return Ok(_mapper.Map<ToolViewModel>(result));
                         }
+                        return BadRequest();
                     }
                     return BadRequest();
 
@@ -69,12 +76,8 @@ namespace Arcation.API.Controllers
                     {
                         queryTool.Count = model.ToolCount;
                         queryTool.ToolName = model.ToolName;
-
-                        if (await _unitOfWork.Complete())
-                        {
-                            return Ok(_mapper.Map<ToolViewModel>(queryTool));
-                        }
-                        return BadRequest();
+                        await _unitOfWork.Complete();
+                        return Ok(_mapper.Map<ToolViewModel>(queryTool));
                     }
                     return NotFound();
                 }
@@ -87,7 +90,7 @@ namespace Arcation.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var tools = await _unitOfWork.Tools.FindAllAsync(e => e.BusinessId == HttpContext.GetBusinessId());
+            var tools = await _unitOfWork.Tools.FindAllAsync(e => e.BusinessId == HttpContext.GetBusinessId() && !e.IsDeleted);
             if (tools != null)
             {
                 return Ok(_mapper.Map<IEnumerable<ToolViewModel>>(tools));

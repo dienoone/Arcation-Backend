@@ -33,7 +33,12 @@ namespace Arcation.API.Controllers
             IEnumerable<EmployeeType> entities = await _unitOfWork.EmployeeTypes.FindAllAsync(e => e.BusinessId == HttpContext.GetBusinessId() && e.IsDeleted == false);
             if(entities != null)
             {
-                return Ok(_mapper.Map<IEnumerable<EmployeeTypeDto>>(entities));
+                var types = _mapper.Map<IEnumerable<EmployeeTypeDto>>(entities);
+                foreach(var type in types)
+                {
+                    type.Count = await _unitOfWork.Employees.CountAsync(e => e.TypeId == type.Id && e.BusinessId == HttpContext.GetBusinessId() && !e.IsDeleted);
+                }
+                return Ok(types);
             }
             return NoContent();
             
@@ -61,7 +66,7 @@ namespace Arcation.API.Controllers
         {
             if (ModelState.IsValid)
             {
-                var IsExist = await _unitOfWork.EmployeeTypes.FindAsync(t => t.BusinessId == HttpContext.GetBusinessId() && t.Type == model.Type);
+                var IsExist = await _unitOfWork.EmployeeTypes.FindAsync(t => t.BusinessId == HttpContext.GetBusinessId() && t.Type == model.Type && !t.IsDeleted);
                 if(IsExist == null)
                 {
                     EmployeeType newType = _mapper.Map<EmployeeType>(model);

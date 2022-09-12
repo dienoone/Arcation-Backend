@@ -15,6 +15,9 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
 
 
         double GetBandLocationInnerReport(int? bandLocationId, string busiessId);
+        double GetCompanyGlobalReport(int? companyId, string busiessId);
+        double GetLocationGlobalReport(int? locationId, string busiessId);
+        double GetBandGlobalReport(int? bandId, string busiessId);
 
     }
 }

@@ -223,7 +223,7 @@ namespace Arcation.API.Controllers
 
         // api/employees => create employee
         [HttpPost]
-        public async Task<IActionResult> CreateEmployee([FromForm] AddEmployeeDto dto)
+        public async Task<IActionResult> CreateEmployee([FromBody] AddEmployeeDto dto)
         {
             if (ModelState.IsValid)
             {
@@ -300,7 +300,7 @@ namespace Arcation.API.Controllers
 
         // api/employees/{id} => Update Employee
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateEmployee([FromRoute] int? id, [FromForm] UpdateEmployeeDto dto)
+        public async Task<IActionResult> UpdateEmployee([FromRoute] int? id, [FromBody] UpdateEmployeeDto dto)
         {
             if (ModelState.IsValid)
             {

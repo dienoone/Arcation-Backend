@@ -22,5 +22,11 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
 
 
         int GetBandLocationInnerReport(int? bandLocationId, int? typeId, string businessId);
+        int GetNumberOfEmployeesInCompany(int? companyId, string businessId);
+        int GetNumberOfEmployeesInLocation(int? locationId, string businessId);
+        int GetNumberOfEmployeesInBand(int? bandId, string businessId);
+        int GetNumberOfEmployeeTypeInCompany(int? companyId, int? typeId, string businessId);
+        int GetNumberOfEmployeeTypeInLocation(int? locationId, int? typeId, string businessId);
+        int GetNumberOfEmployeeTypeInBand(int? bandId, int? typeId, string businessId);
     }
 }

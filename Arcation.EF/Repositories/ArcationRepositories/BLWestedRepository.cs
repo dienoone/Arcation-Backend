@@ -43,5 +43,29 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .Sum(e => e.Price);
 
         }
+
+        public double GetCompanyGlobalReport(int? companyId, string busiessId)
+        {
+            return _context.BLWesteds
+                .Where(e => e.BandLocation.Location.CompanyId == companyId && !e.IsDeleted && e.BusinessId == busiessId)
+                .Sum(e => e.Price);
+
+        }
+
+        public double GetLocationGlobalReport(int? locationId, string busiessId)
+        {
+            return _context.BLWesteds
+                .Where(e => e.BandLocation.LocationId == locationId && !e.IsDeleted && e.BusinessId == busiessId)
+                .Sum(e => e.Price);
+
+        }
+
+        public double GetBandGlobalReport(int? bandId, string busiessId)
+        {
+            return _context.BLWesteds
+                .Where(e => e.BandLocation.Id == bandId && !e.IsDeleted && e.BusinessId == busiessId)
+                .Sum(e => e.Price);
+
+        }
     }
 }

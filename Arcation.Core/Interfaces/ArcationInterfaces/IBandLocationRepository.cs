@@ -11,5 +11,8 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
     {
         Task<List<int>> GetBandsId(int locationId);
         Task<BandLocation> GetBandLocationReport(int? bandLocationId, string businessId);
+
+
+        int NumberOfBandCompany(int? companyId, string busienssId);
     }
 }

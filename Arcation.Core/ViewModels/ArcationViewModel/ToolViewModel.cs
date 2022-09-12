@@ -18,6 +18,7 @@ namespace Arcation.Core.ViewModels.ArcationViewModel
 
     public class ToolViewModel
     {
+        public int Id { get; set; }
         public string ToolName { get; set; }
         public int ToolCount { get; set; }
     }

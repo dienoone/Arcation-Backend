@@ -41,5 +41,12 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .Include(e => e.BandLocationLeaders).ThenInclude(e => e.BandLocationLeaderPeriods).ThenInclude(e => e.BandLocationLeaderPeriodEmployees).ThenInclude(e => e.BandLocationLeaderPeriodEmployeePeriods).ThenInclude(e => e.BandLocationLeaderPeriodEmployeePeriodAttendances)
                 .FirstOrDefaultAsync(e => e.Id == bandLocationId && e.BusinessId == businessId);
         }
+
+        public int NumberOfBandCompany(int? companyId, string busienssId)
+        {
+            return _context.BandLocations
+                .Where(e => e.Location.CompanyId == companyId && !e.IsDeleted && e.BusinessId == busienssId)
+                .Count();
+        }
     }
 }
