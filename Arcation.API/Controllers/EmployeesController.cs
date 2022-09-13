@@ -306,66 +306,41 @@ namespace Arcation.API.Controllers
             {
                 if (id != null)
                 {
-                    Employee isNameExist = await _unitOfWork.Employees.FindAsync(e => e.Name == dto.Name && e.BusinessId == HttpContext.GetBusinessId());
-                    if (isNameExist == null)
+                    Employee queryEmployee = await _unitOfWork.Employees.FindAsync(b => b.Id == id && b.BusinessId == HttpContext.GetUserId());
+                    if (queryEmployee != null)
                     {
-                        Employee queryEmployee = await _unitOfWork.Employees.FindAsync(b => b.Id == id && b.BusinessId == HttpContext.GetUserId());
-                        if (queryEmployee != null)
+
+                        if (queryEmployee.Name == dto.Name)
                         {
                             queryEmployee.Name = dto.Name;
                             queryEmployee.Phone = dto.Phone;
                             queryEmployee.Salary = dto.Salary;
                             queryEmployee.TypeId = dto.TypeId;
-
-                            // ----- This Part Related To Photos ---------
-                            string photo = "photo";
-                            string IdentityPhoto = "IdentityPhoto";
-                            if (dto.Photo != null)
+                            await _unitOfWork.Complete();
+                            var getEmployee = await _unitOfWork.Employees.GetEmployeeIncludeTypes(queryEmployee.Id, HttpContext.GetBusinessId());
+                            return Ok(_mapper.Map<EmployeeDetailsDto>(getEmployee));
+                        }
+                        else
+                        {
+                            Employee isExist = await _unitOfWork.Employees.FindAsync(b => b.Name == dto.Name && b.BusinessId == HttpContext.GetUserId() && !b.IsDeleted);
+                            if (isExist == null)
                             {
-                                if (dto.Photo.Length > 0)
-                                {
-                                    photo = await _imageHandler.UploadImage(dto.Photo);
-                                    if (photo == "Invalid image file") return BadRequest();
-                                }
-                            }
-                            if (dto.IdentityPhoto != null)
-                            {
-                                if (dto.IdentityPhoto.Length > 0)
-                                {
-                                    IdentityPhoto = await _imageHandler.UploadImage(dto.IdentityPhoto);
-                                    if (IdentityPhoto == "Invalid image file") return BadRequest();
-                                }
-                            }
-                            if (photo != "photo")
-                            {
-                                queryEmployee.Photo = _appURL.AppUrl + photo;
-                            }
-                            else
-                            {
-                                queryEmployee.Photo = null;
-                            }
-                            if (IdentityPhoto != "IdentityPhoto")
-                            {
-                                queryEmployee.IdentityPhoto = _appURL.AppUrl + IdentityPhoto;
-                            }
-                            else
-                            {
-                                queryEmployee.IdentityPhoto = null;
-                            }
-                            // --------------- End Region ----------------
-
-                            if (await _unitOfWork.Complete())
-                            {
+                                queryEmployee.Name = dto.Name;
+                                queryEmployee.Phone = dto.Phone;
+                                queryEmployee.Salary = dto.Salary;
+                                queryEmployee.TypeId = dto.TypeId;
+                                await _unitOfWork.Complete();
                                 var getEmployee = await _unitOfWork.Employees.GetEmployeeIncludeTypes(queryEmployee.Id, HttpContext.GetBusinessId());
                                 return Ok(_mapper.Map<EmployeeDetailsDto>(getEmployee));
+
                             }
-                            return BadRequest();
+                            return BadRequest("This is name Already Exist");
                         }
-                        return NotFound();
                     }
-                    return BadRequest("هذا الاسم موجود بالفعل");
+                    return NotFound("This employee doesn't exist !!");
+
                 }
-                return NotFound();
+                return NotFound("This employee doesn't exist !!");
             }
             return BadRequest(ModelState);
         }
@@ -405,7 +380,6 @@ namespace Arcation.API.Controllers
             IEnumerable<Employee> entities = await _unitOfWork.Employees.FindAllAsync(l => !l.IsDeleted && l.BusinessId == HttpContext.GetBusinessId(), new string[] { "Type" });
             return Ok(_mapper.Map<IEnumerable<AddEmployeeToPeriodRequireDto>>(entities));
         }
-
         #endregion
     }
 }

@@ -126,20 +126,21 @@ namespace Arcation.API.Controllers
                         else 
                         {
                             isExist.State = true;
+                            isExist.IsDeleted = false;
                         }
                     }
                     
                     if (bandLocationLeaderPeriodEmployees.Count > 0)
                     {
-                        var result = await _unitOfWork.BandLocationLeaderPeriodEmployees.AddRangeAsync(bandLocationLeaderPeriodEmployees);
-
-                        if (result != null && await _unitOfWork.Complete())
-                        {
-                            return Ok("Added Successfully");
-                        }
-                        return BadRequest("حدث خطأ اثناء الاضافه");
+                        var result = await _unitOfWork.BandLocationLeaderPeriodEmployees.AddRangeAsync(bandLocationLeaderPeriodEmployees);     
                     }
-                    return NoContent();
+
+                    if (await _unitOfWork.Complete())
+                    {
+                        return Ok("Added Successfully");
+                    }
+                    return BadRequest("حدث خطأ اثناء الاضافه");
+                    
                 }
                 return BadRequest();
             }

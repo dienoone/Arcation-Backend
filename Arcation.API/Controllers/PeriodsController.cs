@@ -89,7 +89,7 @@ namespace Arcation.API.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    Period isExist = await _unitOfWork.Periods.FindAsync(e => e.Name == dto.Name && e.BusinessId == HttpContext.GetBusinessId());
+                    Period isExist = await _unitOfWork.Periods.FindAsync(e => e.Name == dto.Name && e.BusinessId == HttpContext.GetBusinessId() && e.BandLocationId == BandLocationId && !e.IsDeleted);
                     if (isExist == null)
                     {
                         Period newPeriod = new Period

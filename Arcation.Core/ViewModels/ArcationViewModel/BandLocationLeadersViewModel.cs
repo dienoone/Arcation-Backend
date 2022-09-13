@@ -37,6 +37,7 @@ namespace Arcation.Core.ViewModels.ArcationViewModel
         public int bandLocationLeaderPeriodId { get; set; }
         public string PeriodName { get; set; }
         public bool periodState { get; set; }
+        public int PeriodId { get; set; }
     }
 
     public class UpdateBandLocationLeaderPeriodsDto : AssignPeriodToLeaderDto

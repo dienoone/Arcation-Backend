@@ -423,60 +423,7 @@ namespace Arcation.API.Controllers
             return NotFound();
         }
 
-        // api/Search/LeaderEmployees/{bandLocationId}/employee/{name}
-        [HttpGet("LeaderEmployeesForAdd/{bandLocationLeaderPeriodId}/employee/{name}")]
-        public async Task<IActionResult> SearchLeaderEmployeesForAdd([FromRoute] int? bandLocationLeaderPeriodId, [FromRoute] string name)
-        {
-            if (bandLocationLeaderPeriodId != null)
-            {
-                BusinessId = HttpContext.GetBusinessId();
-                BandLocationLeaderPeriod bandLocation = await _unitOfWork.BandLocationLeaderPeriods.FindAsync(e => e.Id == bandLocationLeaderPeriodId && e.BusinessId == BusinessId && !e.IsDeleted);
-                if (bandLocation != null)
-                {
-                    if (name != null)
-                    {
-                        IEnumerable<Employee> employees = await _unitOfWork.Employees.FindAllAsync(e => e.BusinessId == BusinessId && !e.IsDeleted && e.Name.Contains(name), new[] { "Type" });
-                        IEnumerable<BandLocationLeaderPeriodEmployee> periodEmployees = await _unitOfWork.BandLocationLeaderPeriodEmployees.FindAllAsync(e => e.BusinessId == HttpContext.GetBusinessId() && e.BandLocationLeaderPeriodId == bandLocationLeaderPeriodId && !e.IsDeleted);
-                        List<Employee> filterEmployees = new();
-                        foreach (Employee emp in employees)
-                        {
-                            var exist = periodEmployees.FirstOrDefault(e => e.EmployeeId == emp.Id);
-                            if (exist == null)
-                            {
-                                filterEmployees.Add(emp);
-                            }
-                        }
-                        if (filterEmployees != null)
-                        {
-                            return Ok(_mapper.Map<IEnumerable<EmployeePageDto>>(filterEmployees));
-                        }
-                        return NoContent();
-                    }
-                    else
-                    {
-                        IEnumerable<Employee> employees = await _unitOfWork.Employees.FindAllAsync(e => e.BusinessId == BusinessId && !e.IsDeleted, new[] {"Type" });
-                        IEnumerable<BandLocationLeaderPeriodEmployee> periodEmployees = await _unitOfWork.BandLocationLeaderPeriodEmployees.FindAllAsync(e => e.BusinessId == HttpContext.GetBusinessId() && e.BandLocationLeaderPeriodId == bandLocationLeaderPeriodId && !e.IsDeleted);
-                        List<Employee> filterEmployees = new();
-                        foreach (Employee emp in employees)
-                        {
-                            var exist = periodEmployees.FirstOrDefault(e => e.EmployeeId == emp.Id);
-                            if (exist == null)
-                            {
-                                filterEmployees.Add(emp);
-                            }
-                        }
-                        if(filterEmployees != null)
-                        {
-                            return Ok(_mapper.Map<IEnumerable<EmployeePageDto>>(filterEmployees));
-                        }
-                        return NoContent();
-                    }
-                }
-                return NotFound();
-            }
-            return NotFound();
-        }
-
+        
         // api/Search/Attendances/{attendanceID}/Employee/{name}
         [HttpGet("Attendances/{attendanceID}/Employee/{name}")]
         public async Task<IActionResult> SearchAttendance([FromRoute] int? attendanceID, [FromRoute] string name) 
@@ -564,7 +511,7 @@ namespace Arcation.API.Controllers
             }
             else
             {
-                IEnumerable<Employee> entities = await _unitOfWork.Employees.GetAllIncludeTypes(HttpContext.GetBusinessId());
+                IEnumerable<Employee> entities = await _unitOfWork.Employees.GetAllIncludeTypes(BusinessId);
                 return Ok(_mapper.Map<IEnumerable<EmployeePageDto>>(entities));
                 
             }

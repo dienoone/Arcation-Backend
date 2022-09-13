@@ -105,8 +105,8 @@ namespace Arcation.EF.Helper
                 {
                     bandLocationLeaderPeriodId = n.Id,
                     PeriodName = n.Period.Name,
-                    periodState = n.Period.State
-
+                    periodState = n.Period.State,
+                    PeriodId = n.PeriodId
                 })));
 
             CreateMap<Period, AddPeriodRequireDto>().ReverseMap();
