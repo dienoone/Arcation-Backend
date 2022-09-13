@@ -9,6 +9,7 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
 {
     public interface IWestedRepository : IBaseRepository<Wested>
     {
+        double GetSum(int? bandLocationLeaderPeriodId, string businessId);
         double GetPeriodReport(int? periodId, string businessId);
         double GetBandLocationInnerReport(int? bandLocationId, string businessId);
         double GetCompanyGlobalReport(int? companyId, string busiessId);

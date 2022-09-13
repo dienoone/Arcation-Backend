@@ -16,9 +16,9 @@ namespace Arcation.EF.Repositories.ArcationRepositories
             _context = context;
         }
 
-        public double GetSum(int? bandLocationLeaderPeriodId)
+        public double GetSum(int? bandLocationLeaderPeriodId, string businessId)
         {
-            return _context.Transactions.Where(e => !e.IsDeleted).Sum(e => e.Value);
+            return _context.Transactions.Where(e => e.BandLocationLeaderPeriodId == bandLocationLeaderPeriodId && e.BusinessId == businessId && !e.IsDeleted).Sum(e => e.Value);
         }
 
 

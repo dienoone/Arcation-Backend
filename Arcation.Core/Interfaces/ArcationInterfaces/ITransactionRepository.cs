@@ -9,7 +9,7 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
 {
     public interface ITransactionRepository : IBaseRepository<Transiction>
     {
-        double GetSum(int? bandLocationLeaderPeriodId);
+        double GetSum(int? bandLocationLeaderPeriodId, string businessId);
         double GetPeriodReport(int? periodId, string businessId);
         double GetBandLocationInnerReport(int? bandLocationId, string businessId);
         double GetCompanyGlobalReport(int? companyId, string busiessId);

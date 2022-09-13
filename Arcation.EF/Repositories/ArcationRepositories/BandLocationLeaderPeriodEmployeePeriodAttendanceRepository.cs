@@ -18,6 +18,20 @@ namespace Arcation.EF.Repositories.ArcationRepositories
             _context = context;
         }
 
+        public double GetTotalSalaryOfEmployeeLeaderPeriodReoprt(int? bandLocationLeaderPeriodId, string busniessId)
+        {
+            return _context.BandLocationLeaderPeriodEmployeePeriodAttendances
+                .Where(e => e.BandLocationLeaderPeriodEmployeePeriod.BandLocationLeaderPeriodEmployee.BandLocationLeaderPeriod.Id == bandLocationLeaderPeriodId && !e.IsDeleted && e.BusinessId == busniessId)
+                .Sum(e => e.WorkingHours * e.BandLocationLeaderPeriodEmployeePeriod.EmployeeSalary);
+        }
+
+        public double GetTotalBorrowOfEmployeeLeaderPeriodReoprt(int? bandLocationLeaderPeriodId, string busniessId)
+        {
+            return _context.BandLocationLeaderPeriodEmployeePeriodAttendances
+                .Where(e => e.BandLocationLeaderPeriodEmployeePeriod.BandLocationLeaderPeriodEmployee.BandLocationLeaderPeriod.Id == bandLocationLeaderPeriodId && !e.IsDeleted && e.BusinessId == busniessId)
+                .Sum(e => e.BorrowValue);
+        }
+
         public double GetTotalPaiedOfEmployeePeriodReoprt(int? periodId, string busniessId)
         {
             return _context.BandLocationLeaderPeriodEmployeePeriodAttendances

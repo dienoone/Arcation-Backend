@@ -20,6 +20,7 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
         Task<IEnumerable<EmployeeType>> GetEmployeeTypesLocation(int locationID);
         Task<IEnumerable<EmployeeType>> GetEmployeeTypesBand(int bandId);
 
+        int GetTypeCountLeaderPeriodReport(int? bandLocationLeaderPeriodId, int typeId, string businessId);
         int GetPeriodCountEmployees(int? periodId, string buseinssId);
         int GetBandLocationInnerReport(int? bandLocationId, int? typeId, string businessId);
         int GetNumberOfEmployeesInCompany(int? companyId, string businessId);

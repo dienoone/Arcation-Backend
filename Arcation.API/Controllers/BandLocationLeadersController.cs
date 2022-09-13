@@ -375,33 +375,46 @@ namespace Arcation.API.Controllers
         {
             if(bandLocationLeaderPeriodId != null)
             {
-                BandLocationLeaderPeriod entity = await _unitOfWork.BandLocationLeaderPeriods.GetLeaderPeriodDetail(bandLocationLeaderPeriodId, HttpContext.GetBusinessId());
+                string businessId = HttpContext.GetBusinessId();
+                BandLocationLeaderPeriod entity = await _unitOfWork.BandLocationLeaderPeriods.GetLeaderPeriodDetail(bandLocationLeaderPeriodId, businessId);
                 if(entity != null)
                 {
-
-
-                    PeriodDetail periodDetail = _mapper.Map<PeriodDetail>(entity);
+                    // FINISHED:
+                    PeriodDetail periodDetail = new();
+                    periodDetail.TotalTransictions = _unitOfWork.LeaderTransactions.GetSum(bandLocationLeaderPeriodId, businessId);
+                    periodDetail.TotalBorrows = _unitOfWork.BandLocationLeaderPeriodEmployeePeriodAttendances.GetTotalBorrowOfEmployeeLeaderPeriodReoprt(bandLocationLeaderPeriodId, businessId);
+                    periodDetail.TotalWesteds = _unitOfWork.LeaderWesteds.GetSum(bandLocationLeaderPeriodId, businessId);
                     periodDetail.Remainder = periodDetail.TotalTransictions - periodDetail.TotalWesteds - periodDetail.TotalBorrows;
+                    periodDetail.TotalDays = await _unitOfWork.Attendances.CountAsync(e => e.BandLocationLeaderPeriodId == bandLocationLeaderPeriodId && !e.IsDeleted && e.BusinessId == businessId);
 
-                    LeaderDetail leaderDetail = _mapper.Map<LeaderDetail>(entity);
+                    LeaderDetail leaderDetail = new();
+                    leaderDetail.LeaderName = entity.BandLocationLeader.Leader.Name;
+                    leaderDetail.LeaderSalary = entity.LeaderSalary;
+                    leaderDetail.TotalDays = _unitOfWork.Attendances.GetLeaderDays(bandLocationLeaderPeriodId, businessId);
+                    leaderDetail.TotalBorrow = _unitOfWork.Attendances.GetLeaderBorrow(bandLocationLeaderPeriodId, businessId);
+                    leaderDetail.IsEnded = entity.State;
+                    leaderDetail.TotalPaied = entity.TotalPaied;
                     leaderDetail.TotalSalary = leaderDetail.TotalDays * leaderDetail.LeaderSalary;
                     leaderDetail.TotalRemainder = leaderDetail.TotalSalary - leaderDetail.TotalPaied - leaderDetail.TotalBorrow;
 
-                    EmployeesDetail employeesDetail = _mapper.Map<EmployeesDetail>(entity);
+                    // finished
+                    EmployeesDetail employeesDetail = new();
+                    employeesDetail.TotalSalaryOfEmployess = _unitOfWork.BandLocationLeaderPeriodEmployeePeriodAttendances.GetTotalSalaryOfEmployeeLeaderPeriodReoprt(bandLocationLeaderPeriodId, businessId);
+                    employeesDetail.TotalPaied = periodDetail.TotalBorrows;
                     employeesDetail.TotalRemainder = employeesDetail.TotalSalaryOfEmployess - employeesDetail.TotalPaied;
 
                     // ----- Employee Types:
-                    var employeesTypes = await _unitOfWork.EmployeeTypes.FindAllAsync(e => e.BusinessId == HttpContext.GetBusinessId());
+                    var employeesTypes = await _unitOfWork.EmployeeTypes.FindAllAsync(e => e.BusinessId == businessId && !e.IsDeleted);
                     List<EmployeeTypesDetail> employeeTypesDetails = new List<EmployeeTypesDetail>();
                     foreach (var employeesType in employeesTypes)
                     {
-                        var employees = entity.BandLocationLeaderPeriodEmployees.Where(e => e.Employee.TypeId == employeesType.Id);
-                        if (employees.Count() > 0)
+                        int count = _unitOfWork.BandLocationLeaderPeriodEmployees.GetTypeCountLeaderPeriodReport(bandLocationLeaderPeriodId, employeesType.Id,businessId);
+                        if (count > 0)
                         {
                             EmployeeTypesDetail detail = new EmployeeTypesDetail
                             {
                                 TypeName = employeesType.Type,
-                                TotalEmployess = employees.Count()
+                                TotalEmployess = count
                             };
                             employeeTypesDetails.Add(detail);
                         }

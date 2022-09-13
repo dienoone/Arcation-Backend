@@ -67,7 +67,6 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .Where(e => e.EmployeeId == employeeId && e.BusinessId == busniessId)
                 .ToListAsync();
         }
-
         public async Task<IEnumerable<EmployeeType>> GetEmployeeTypesCompany(int companyID)
         {
             return await _context.BandLocationLeaderPeriodEmployees
@@ -91,6 +90,13 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .Select(e => e.Employee.Type)
                 .ToListAsync();
 
+        }
+
+        public int GetTypeCountLeaderPeriodReport(int? bandLocationLeaderPeriodId, int typeId, string businessId)
+        {
+            return _context.BandLocationLeaderPeriodEmployees
+                .Where(e => e.BandLocationLeaderPeriodId == bandLocationLeaderPeriodId && e.BusinessId == businessId && !e.IsDeleted && e.Employee.TypeId == typeId)
+                .Count();
         }
 
         public int GetPeriodCountEmployees(int? periodId, string buseinssId)

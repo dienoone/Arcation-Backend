@@ -58,6 +58,20 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .FirstOrDefaultAsync(e => e.Id == attendanceId && e.BusinessId == businessID);
         }
 
+        public double GetLeaderBorrow(int? bandLocationLeaderPeriodId, string businessId)
+        {
+            return _context.Attendances
+                .Where(e => e.BandLocationLeaderPeriodId == bandLocationLeaderPeriodId && !e.IsDeleted && e.BusinessId == businessId)
+                .Sum(e => e.BorrowValue);
+        }
+
+        public double GetLeaderDays(int? bandLocationLeaderPeriodId, string businessId)
+        {
+            return _context.Attendances
+                .Where(e => e.BandLocationLeaderPeriodId == bandLocationLeaderPeriodId && !e.IsDeleted && e.BusinessId == businessId)
+                .Sum(e => e.WorkingHours);
+        }
+
         public double GetPeriodDaysReport(int? periodId, string businessId)
         {
             return _context.Attendances

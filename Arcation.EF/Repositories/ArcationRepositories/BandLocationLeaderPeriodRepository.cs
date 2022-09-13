@@ -31,12 +31,6 @@ namespace Arcation.EF.Repositories.ArcationRepositories
         {
             return await _context.BandLocationLeaderPeriods
                 .Include(e => e.BandLocationLeader.Leader)
-                .Include(e => e.Transactions.Where(e => !e.IsDeleted))
-                .Include(e => e.Westeds.Where(e => !e.IsDeleted))
-                .Include(e => e.Attendances.Where(e => !e.IsDeleted))
-                .Include(c => c.BandLocationLeaderPeriodEmployees.Where(c => !c.IsDeleted)).ThenInclude(c => c.Employee).ThenInclude(z => z.Type)
-                .Include(c => c.BandLocationLeaderPeriodEmployees.Where(c => !c.IsDeleted))
-                .ThenInclude(c => c.BandLocationLeaderPeriodEmployeePeriods.Where(c => !c.IsDeleted)).ThenInclude(a => a.BandLocationLeaderPeriodEmployeePeriodAttendances.Where(c => !c.IsDeleted))
                 .Where(e => !e.IsDeleted && e.BusinessId == businessId && e.Id == bandLocationLeaderPeriodId).FirstOrDefaultAsync();
         }
 

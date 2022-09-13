@@ -9,6 +9,8 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
 {
     public interface IBandLocationLeaderPeriodEmployeePeriodAttendanceRepository : IBaseRepository<BandLocationLeaderPeriodEmployeePeriodAttendance>
     {
+        double GetTotalSalaryOfEmployeeLeaderPeriodReoprt(int? bandLocationLeaderPeriodId, string busniessId);
+        double GetTotalBorrowOfEmployeeLeaderPeriodReoprt(int? bandLocationLeaderPeriodId, string busniessId);
         double GetTotalBorrowOfEmployeePeriodReoprt(int? periodId, string busniessId);
         double GetTotalPaiedOfEmployeePeriodReoprt(int? periodId, string busniessId);
         double GetTotalSalaryOfEmployeePeriodReoprt(int? periodId, string busniessId);
