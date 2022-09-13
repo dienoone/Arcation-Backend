@@ -169,11 +169,14 @@ namespace Arcation.API.Controllers
         {
             if(id != null)
             {
-                var leader = await _unitOfWork.BandLocationLeaders.GetLeaderWithPeriod(dto.BandLocationLeaderId, HttpContext.GetBusinessId());
+                string businessId = HttpContext.GetBusinessId();
+                var leader = await _unitOfWork.BandLocationLeaders.FindAsync(e => e.Id == id && e.BusinessId == businessId && !e.IsDeleted);
                 if(leader != null)
                 {
-                    var newList = await UpdateBandLocationLeaderPeriodHelper(dto, leader, dto.OldList);
-                    if (newList != null)
+                    leader = await _unitOfWork.BandLocationLeaders.GetLeaderWithPeriod(id, businessId);
+                    var oldList = await _unitOfWork.BandLocationLeaderPeriods.GetPeriodIds(id, businessId);
+                    var newList = await UpdateBandLocationLeaderPeriodHelper(dto, leader, oldList);
+                    if (newList.Count > 0)
                     {
                         var newBandLocationLeaderPeriods = await _unitOfWork.BandLocationLeaderPeriods.AddRangeAsync(newList);
                         if (newBandLocationLeaderPeriods != null && await _unitOfWork.Complete())
@@ -185,12 +188,10 @@ namespace Arcation.API.Controllers
                     }
                     else
                     {
-                        if(await _unitOfWork.Complete())
-                        {
-                            BandLocationLeader leaders = await _unitOfWork.BandLocationLeaders.GetLeaderWithPeriod(leader.BandLocationId, leader.Id, HttpContext.GetBusinessId());
-                            return Ok(_mapper.Map<BandLocationLeaderPeriodsDto>(leaders));
-                        }
-                        return BadRequest();
+                        await _unitOfWork.Complete();
+                        BandLocationLeader leaders = await _unitOfWork.BandLocationLeaders.GetLeaderWithPeriod(leader.BandLocationId, leader.Id, HttpContext.GetBusinessId());
+                        return Ok(_mapper.Map<BandLocationLeaderPeriodsDto>(leaders));
+                        
                     }
                     
                 }
@@ -226,39 +227,48 @@ namespace Arcation.API.Controllers
                 }
             }
 
-            if (newList != null)
+            if (newList.Count > 0)
             {
                 foreach (int newid in newList)
                 {
-                    BandLocationLeaderPeriod isExist = await _unitOfWork.BandLocationLeaderPeriods.FindAsync(bllp => bllp.PeriodId == newid && bllp.BandLocationLeaderId == dto.BandLocationLeaderId);
-                    if(isExist == null)
+                    Period period = await _unitOfWork.Periods.FindAsync(e => e.Id == newid);
+                    if(period != null)
                     {
-                        var bandLocationLeaderPeriod = new BandLocationLeaderPeriod
+                        BandLocationLeaderPeriod isExist = await _unitOfWork.BandLocationLeaderPeriods.FindAsync(bllp => bllp.PeriodId == newid && bllp.BandLocationLeaderId == dto.BandLocationLeaderId && !bllp.IsDeleted);
+                        if (isExist == null)
                         {
-                            BandLocationLeaderId = query.Id,
-                            PeriodId = newid,
-                            IsDeleted = false,
-                            CreatedAt = DateTime.UtcNow,
-                            CreatedBy = HttpContext.GetUserId(),
-                            BusinessId = HttpContext.GetBusinessId(),
-                            StartingDate = DateTime.UtcNow,
-                            State = true,
-                            PayiedState = false,
-                            EndingDate = null,
-                            LeaderSalary = query.Leader.Salary,
-                            TotalPaied = 0
-                        };
-                        BandLocationLeaderPeriods.Add(bandLocationLeaderPeriod);
+
+                            var bandLocationLeaderPeriod = new BandLocationLeaderPeriod
+                            {
+                                BandLocationLeaderId = query.Id,
+                                PeriodId = newid,
+                                IsDeleted = false,
+                                CreatedAt = DateTime.UtcNow,
+                                CreatedBy = HttpContext.GetUserId(),
+                                BusinessId = HttpContext.GetBusinessId(),
+                                StartingDate = DateTime.UtcNow,
+                                State = true,
+                                PayiedState = false,
+                                EndingDate = null,
+                                LeaderSalary = query.Leader.Salary,
+                                TotalPaied = 0
+                            };
+                            BandLocationLeaderPeriods.Add(bandLocationLeaderPeriod);
+                        }
                     }
                 }
             }
 
-            if (deletedList != null)
+            if (deletedList.Count > 0)
             {
                 foreach (int deletedId in deletedList)
                 {
-                    var queryBandLocationLeaderPeriod = await _unitOfWork.BandLocationLeaderPeriods.FindAsync(e => e.Id == deletedId && e.BandLocationLeaderId == query.Id);
-                    queryBandLocationLeaderPeriod.IsDeleted = false;
+                    var queryBandLocationLeaderPeriod = await _unitOfWork.BandLocationLeaderPeriods.FindAsync(e => e.PeriodId == deletedId && e.BandLocationLeaderId == query.Id && !e.IsDeleted);
+                    if(queryBandLocationLeaderPeriod != null)
+                    {
+                        queryBandLocationLeaderPeriod.IsDeleted = true;
+                    }
+                    
                 }
             }
 

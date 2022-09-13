@@ -9,15 +9,9 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
 {
     public interface IBandLocationLeaderPeriodEmployeePeriodAttendanceRepository : IBaseRepository<BandLocationLeaderPeriodEmployeePeriodAttendance>
     {
-        Task<double> GetSumOfBorrowValue(IEnumerable<int> Ids);
-        double GetTotalCompanyBorrow(int? companyId);
-        double GetTotalBandBorrow(int? bandId);
-        double GetTotalLocationBorrow(int? locationId);
-        double GetTotalCompanyHours(int? companyId);
-        double GetTotalBandHours(int? bandId);
-        double GetTotalLocationHours(int? locationId);
-
-
+        double GetTotalBorrowOfEmployeePeriodReoprt(int? periodId, string busniessId);
+        double GetTotalPaiedOfEmployeePeriodReoprt(int? periodId, string busniessId);
+        double GetTotalSalaryOfEmployeePeriodReoprt(int? periodId, string busniessId);
         double GetBandLocationInnerReport(int? bandLocationId, string businessId);
         double GetBandLocationInnerReportBorrow(int? bandLocationId, string businessId);
 

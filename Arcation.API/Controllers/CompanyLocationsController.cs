@@ -221,10 +221,6 @@ namespace Arcation.API.Controllers
                 }
             }
 
-            // old [5, 10, 30]
-            // bandIds [15, 5, 10] 0
-            // new []
-            // deleted []
 
             for (int i = 0; i < oldlist.Count; i++)
             {

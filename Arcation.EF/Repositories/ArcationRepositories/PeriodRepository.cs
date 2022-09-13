@@ -17,12 +17,14 @@ namespace Arcation.EF.Repositories.ArcationRepositories
             _context = context;
         }
 
-        public async Task<IEnumerable<Period>> GetPeriods(int? bandLocationId)
+        public async Task<Period> GetPeriodIncludeBandLocation(int? periodId, string businessId)
         {
-            return await _context.Periods.Include(e => e.BandLocationLeaderPeriods.Where(e => !e.IsDeleted))
-                .ThenInclude(e => e.BandLocationLeader.Leader)
-                .Where(e => e.BandLocationId == bandLocationId && !e.IsDeleted).ToListAsync();
+            return await _context.Periods
+                .Include(e => e.BandLocation.Band)
+                .Include(e => e.BandLocation.Location)
+                .FirstOrDefaultAsync(e => e.Id == periodId && !e.IsDeleted && e.BusinessId == businessId);
         }
+
 
         public async Task<Period> GetPeriodDetail(int? periodId, string BusinessId)
         {

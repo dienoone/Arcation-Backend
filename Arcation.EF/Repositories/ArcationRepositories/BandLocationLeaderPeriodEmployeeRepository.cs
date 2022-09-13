@@ -93,7 +93,12 @@ namespace Arcation.EF.Repositories.ArcationRepositories
 
         }
 
-
+        public int GetPeriodCountEmployees(int? periodId, string buseinssId)
+        {
+            return _context.BandLocationLeaderPeriodEmployees
+                .Where(e => e.BandLocationLeaderPeriod.PeriodId == periodId && e.BusinessId == buseinssId && !e.IsDeleted)
+                .Count();
+        }
         public int GetBandLocationInnerReport(int? bandLocationId, int? typeId ,string businessId)
         {
             return _context.BandLocationLeaderPeriodEmployees
@@ -135,6 +140,13 @@ namespace Arcation.EF.Repositories.ArcationRepositories
             return _context.BandLocationLeaderPeriodEmployees
                 .Where(e => e.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.Id == bandId && e.Employee.TypeId == typeId && e.BusinessId == businessId && !e.IsDeleted)
                 .Count();
+        }
+        public async Task<IEnumerable<BandLocationLeaderPeriodEmployee>> GetLeaderPeriodsAsync(int? periodId, string buinessId)
+        {
+            return await _context.BandLocationLeaderPeriodEmployees
+                .Include(e => e.Employee)
+                .Where(e => e.BandLocationLeaderPeriod.PeriodId == periodId && !e.IsDeleted && e.BusinessId == buinessId)
+                .ToListAsync();
         }
     }
 }

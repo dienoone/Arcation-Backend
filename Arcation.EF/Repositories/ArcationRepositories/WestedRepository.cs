@@ -16,29 +16,10 @@ namespace Arcation.EF.Repositories.ArcationRepositories
             _context = context;
         }
 
-        public double GetSum(int? bandLocationLeaderPeriodId)
-        {
-            return _context.Westeds.Where(e => !e.IsDeleted).Sum(e => e.Value);
-        }
-
-        public double GetTotalCompany(int? companyId)
+        public double GetPeriodReport(int? periodId, string businessId)
         {
             return _context.Westeds
-                .Where(e => e.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.Location.CompanyId == companyId)
-                .Sum(e => e.Value);
-        }
-
-        public double GetTotalBand(int? bandId)
-        {
-            return _context.Westeds
-                .Where(e => e.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.Id == bandId)
-                .Sum(e => e.Value);
-        }
-
-        public double GetTotalLocation(int? locationId)
-        {
-            return _context.Westeds
-                .Where(e => e.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.LocationId == locationId)
+                .Where(e => e.BandLocationLeaderPeriod.PeriodId == periodId && e.BusinessId == businessId && !e.IsDeleted)
                 .Sum(e => e.Value);
         }
 

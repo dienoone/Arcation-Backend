@@ -21,8 +21,9 @@ namespace Arcation.EF.Repositories.ArcationRepositories
         public async Task<IEnumerable<BandLocationLeader>> GetLeadersWithPeriods(int? bandLocationId, string businessId)
         {
             return await _context.BandLocationLeaders.Include(bll => bll.Leader)
-                .Include(bll => bll.BandLocationLeaderPeriods.Where(e => !e.IsDeleted)).ThenInclude(e => e.Period).Where(bll => bll.BandLocationId == bandLocationId && bll.BusinessId == businessId &&
-                !bll.IsDeleted).ToListAsync();
+                .Include(bll => bll.BandLocationLeaderPeriods.Where(e => !e.IsDeleted)).ThenInclude(e => e.Period)
+                .Where(bll => bll.BandLocationId == bandLocationId && bll.BusinessId == businessId && !bll.IsDeleted)
+                .ToListAsync();
         }
 
         public async Task<IEnumerable<BandLocationLeader>> SearchLeadersWithPeriods(int? bandLocationId, string name ,string businessId)
@@ -35,8 +36,9 @@ namespace Arcation.EF.Repositories.ArcationRepositories
         public async Task<BandLocationLeader> GetLeaderWithPeriod(int? bandLocationId,int? bandLocationLeaderId, string businessId)
         {
             return await _context.BandLocationLeaders.Include(bll => bll.Leader)
-                .Include(bll => bll.BandLocationLeaderPeriods.Where(e => !e.IsDeleted)).ThenInclude(e => e.Period).Where(bll => bll.BandLocationId == bandLocationId && bll.BusinessId == businessId &&
-                !bll.IsDeleted && bll.Id == bandLocationLeaderId).FirstOrDefaultAsync();
+                .Include(bll => bll.BandLocationLeaderPeriods.Where(e => !e.IsDeleted)).ThenInclude(e => e.Period)
+                .Where(bll => bll.BandLocationId == bandLocationId && bll.BusinessId == businessId && !bll.IsDeleted && bll.Id == bandLocationLeaderId)
+                .FirstOrDefaultAsync();
         }
 
         public async Task<BandLocationLeader> GetLeaderWithPeriod(int? bandLocationLeaderId, string businessId)

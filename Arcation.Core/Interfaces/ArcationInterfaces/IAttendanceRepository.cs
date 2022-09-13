@@ -13,15 +13,10 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
         Task<Attendance> TakeAttendance(int? attendanceId);
         Task<Attendance> GetAttendance(int? attendanceId, int? bandLocationLeaderPeriodId);
         Task<Attendance> GetSearchAttendance(int? attendanceId, string name, string businessID);
-        double GetTotalCompanyBorrow(int? companyId);
-        double GetTotalBandBorrow(int? bandId);
-        double GetTotalLocationBorrow(int? locationId);
-        double GetTotalCompanyHours(int? companyId);
-        double GetTotalBandHours(int? bandId);
-        double GetTotalLocationHours(int? locationId);
-
-
-
+        double GetTotalBorrowOfEmployeePeriodReoprt(int? periodId, string busniessId);
+        double GetTotalPaiedOfEmployeePeriodReoprt(int? periodId, string busniessId);
+        double GetTotalSalaryOfEmployeePeriodReoprt(int? periodId, string busniessId);
+        double GetPeriodDaysReport(int? periodId, string businessId);
         double GetBandLocationInnerReport(int? bandLocationId, string businessId);
         double GetBandLocationInnerReportPaied(int? bandLocationId, string businessId);
 

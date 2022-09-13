@@ -10,5 +10,6 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
     public interface IPeriodRepository : IBaseRepository<Period>
     {
         Task<Period> GetPeriodDetail(int? periodId, string BusinessId);
+        Task<Period> GetPeriodIncludeBandLocation(int? periodId, string businessId);
     }
 }

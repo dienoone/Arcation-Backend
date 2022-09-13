@@ -74,7 +74,7 @@ namespace Arcation.API.Controllers
         {
             if (ModelState.IsValid)
             {
-                Bill IsExist = await _unitOfWork.Bills.FindAsync(e => e.BusinessId == HttpContext.GetBusinessId() && e.BillCode == dto.BillCode && !e.IsDeleted);
+                Bill IsExist = await _unitOfWork.Bills.FindAsync(e => e.BusinessId == HttpContext.GetBusinessId() && e.BillCode == dto.BillCode && e.BandLocationId == dto.BandLocationId && !e.IsDeleted);
                 if (IsExist == null)
                 {
 

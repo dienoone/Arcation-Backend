@@ -18,6 +18,15 @@ namespace Arcation.EF.Repositories.ArcationRepositories
             _context = context;
         }
 
+        public async Task<List<int>> GetPeriodIds(int? bandLocationLeaderId, string businessId)
+        {
+            return await _context.BandLocationLeaderPeriods
+                .Where(e => e.BandLocationLeaderId == bandLocationLeaderId && !e.IsDeleted && e.BusinessId == businessId)
+                .Select(e => e.PeriodId)
+                .ToListAsync();
+
+        }
+
         public async Task<BandLocationLeaderPeriod> GetLeaderPeriodDetail(int? bandLocationLeaderPeriodId, string businessId)
         {
             return await _context.BandLocationLeaderPeriods
@@ -49,42 +58,21 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .ToListAsync();
         }
 
-        public double GetTotalCompanyPaied(int? companyId)
+        public int GetPeriodConutOfLeadersReport(int? periodId, string busniessId)
         {
             return _context.BandLocationLeaderPeriods
-                .Where(e => e.BandLocationLeader.BandLocation.Location.CompanyId == companyId)
-                .Sum(e => e.TotalPaied);
-        }
-        public double GetTotalBandPaied(int? bandId)
-        {
-            return _context.BandLocationLeaderPeriods
-                .Where(e => e.BandLocationLeader.BandLocation.Id == bandId)
-                .Sum(e => e.TotalPaied);
-        }
-        public double GetTotalLocationPaied(int? locationId)
-        {
-            return _context.BandLocationLeaderPeriods
-                .Where(e => e.BandLocationLeader.BandLocation.LocationId == locationId)
-                .Sum(e => e.TotalPaied);
-        }
-        public double GetTotalCompanySalary(int? companyId)
-        {
-            return _context.BandLocationLeaderPeriods
-                .Where(e => e.BandLocationLeader.BandLocation.Location.CompanyId == companyId)
-                .Sum(e => e.LeaderSalary);
-        }
-        public double GetTotalBandSalary(int? bandId)
-        {
-            return _context.BandLocationLeaderPeriods
-                .Where(e => e.BandLocationLeader.BandLocation.Id == bandId)
-                .Sum(e => e.LeaderSalary);
-        }
-        public double GetTotalLocationSalary(int? locationId)
-        {
-            return _context.BandLocationLeaderPeriods
-                .Where(e => e.BandLocationLeader.BandLocation.LocationId == locationId)
-                .Sum(e => e.LeaderSalary);
+                .Where(e => e.PeriodId == periodId && !e.IsDeleted && e.BusinessId == busniessId)
+                .Count();
         }
 
+        public async Task<IEnumerable<BandLocationLeaderPeriod>> GetPeriodsAsync(int? periodId, string businessId)
+        {
+            return await _context.BandLocationLeaderPeriods
+                .Include(e => e.BandLocationLeader.Leader)
+                .Where(e => e.PeriodId == periodId && e.BusinessId == businessId && !e.IsDeleted && !e.BandLocationLeader.Leader.IsDeleted)
+                .ToListAsync();
+        }
+
+       
     }
 }

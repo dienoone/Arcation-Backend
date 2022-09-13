@@ -352,7 +352,7 @@ namespace Arcation.API.Controllers
             globalAccountMoney.TotalSalaryOFEmployees = _unitOfWork.BandLocationLeaderPeriodEmployeePeriodAttendances.GetLocationGlobalReportSalary(locationId, businessId);
             globalAccountMoney.TotalSalaryOFLeaders = _unitOfWork.Attendances.GetLocationGlobalReportSalary(locationId, businessId);
             globalAccountMoney.TotalWesteds = _unitOfWork.BLWesteds.GetLocationGlobalReport(locationId, businessId) + _unitOfWork.LeaderWesteds.GetLocationGlobalReport(locationId, businessId);
-            globalAccountMoney.TotalTransictions = _unitOfWork.LeaderTransactions.GetTotalLocation(locationId);
+            globalAccountMoney.TotalTransictions = _unitOfWork.LeaderTransactions.GetLocationGlobalReport(locationId, businessId);
             globalAccountMoney.GlobalSalary = globalAccountMoney.TotalSalaryOFEmployees + globalAccountMoney.TotalSalaryOFLeaders;
             globalAccountMoney.RemainderIncome = globalAccountMoney.TotalExtracts - globalAccountMoney.TotalIncomes;
             globalAccountMoney.RemainderSalary = globalAccountMoney.GlobalSalary - globalAccountMoney.TotalPayied;

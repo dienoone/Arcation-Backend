@@ -21,27 +21,13 @@ namespace Arcation.EF.Repositories.ArcationRepositories
             return _context.Transactions.Where(e => !e.IsDeleted).Sum(e => e.Value);
         }
 
-        public double GetTotalCompany(int? companyId)
+
+        public double GetPeriodReport(int? periodId, string businessId)
         {
             return _context.Transactions
-                .Where(e => e.PeriodLeader.BandLocationLeader.BandLocation.Location.CompanyId == companyId)
+                .Where(e => e.PeriodLeader.PeriodId == periodId && e.BusinessId == businessId && !e.IsDeleted)
                 .Sum(e => e.Value);
         }
-
-        public double GetTotalBand(int? bandId)
-        {
-            return _context.Transactions
-                .Where(e => e.PeriodLeader.BandLocationLeader.BandLocation.Id == bandId)
-                .Sum(e => e.Value);
-        }
-
-        public double GetTotalLocation(int? locationId)
-        {
-            return _context.Transactions
-                .Where(e => e.PeriodLeader.BandLocationLeader.BandLocation.LocationId == locationId)
-                .Sum(e => e.Value);
-        }
-
 
         public double GetBandLocationInnerReport(int? bandLocationId, string businessId)
         {

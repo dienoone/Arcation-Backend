@@ -101,7 +101,7 @@ namespace Arcation.EF.Helper
                 .ForMember(dest => dest.BandLocationLeaderId, src => src.MapFrom(e => e.Id))
                 .ForMember(dest => dest.LeaderName, src => src.MapFrom(e => e.Leader.Name))
                 .ForMember(dest => dest.LeaderSalary, src => src.MapFrom(e => e.Leader.Salary))
-                .ForMember(dest => dest.LeaderPeriods, src => src.MapFrom(e => e.BandLocationLeaderPeriods.Select(n => new LeaderPeriods
+                .ForMember(dest => dest.LeaderPeriods, src => src.MapFrom(e => e.BandLocationLeaderPeriods.Where(e => !e.IsDeleted).Select(n => new LeaderPeriods
                 {
                     bandLocationLeaderPeriodId = n.Id,
                     PeriodName = n.Period.Name,
@@ -225,23 +225,6 @@ namespace Arcation.EF.Helper
                 .ForMember(dest => dest.PeriodId, src => src.MapFrom(src => src.Id))
                 .ForMember(dest => dest.Name, src => src.MapFrom(src => src.Name))
                 .ForMember(dest => dest.State, src => src.MapFrom(src => src.State));
-
-            CreateMap<Period, PeriodDetailDto>()
-                .ForMember(dest => dest.PeriodId, src => src.MapFrom(src => src.Id))
-                .ForMember(dest => dest.PeriodName, src => src.MapFrom(src => src.Name))
-                .ForMember(dest => dest.StartingDate, src => src.MapFrom(src => src.StartingDate))
-                .ForMember(dest => dest.EndingDate, src => src.MapFrom(src => src.EndingDate))
-                .ForMember(dest => dest.PeriodState, src => src.MapFrom(src => src.State))
-                .ForMember(dest => dest.LocationName, src => src.MapFrom(src => src.BandLocation.Location.LocationName))
-                .ForMember(dest => dest.BandName, src => src.MapFrom(src => src.BandLocation.Band.BandName))
-                .ForMember(dest => dest.TotalTransictions, src => src.MapFrom(src => src.BandLocationLeaderPeriods.Sum(e => e.Transactions.Sum(e => e.Value))))
-                .ForMember(dest => dest.TotalWesteds, src => src.MapFrom(src => src.BandLocationLeaderPeriods.Sum(e => e.Westeds.Sum(e => e.Value))))
-                .ForMember(dest => dest.TotalDays, src => src.MapFrom(src => src.BandLocationLeaderPeriods.Sum(e => e.Attendances.Sum(e => e.WorkingHours))))
-                .ForMember(dest => dest.CountOfLeaders, src => src.MapFrom(src => src.BandLocationLeaderPeriods.Count))
-                .ForMember(dest => dest.CountOfEmployees, src => src.MapFrom(src => src.BandLocationLeaderPeriods.Sum(e => e.BandLocationLeaderPeriodEmployees.Count)))
-                .ForMember(dest => dest.TotalSalaryOfEmployees, src => src.MapFrom(src => src.BandLocationLeaderPeriods.Sum(e => e.BandLocationLeaderPeriodEmployees.Sum(e => e.BandLocationLeaderPeriodEmployeePeriods.Sum(e => e.EmployeeSalary * e.BandLocationLeaderPeriodEmployeePeriodAttendances.Sum(e => e.WorkingHours))) + e.LeaderSalary * e.Attendances.Sum(e => e.WorkingHours))))
-                .ForMember(dest => dest.TotalPaied, src => src.MapFrom(src => src.BandLocationLeaderPeriods.Sum(e => e.TotalPaied + e.BandLocationLeaderPeriodEmployees.Sum(e => e.BandLocationLeaderPeriodEmployeePeriods.Sum(e => e.PayiedValue)))))
-                .ForMember(dest => dest.RemainderFromTransictions, src => src.MapFrom(src => src.BandLocationLeaderPeriods.Sum(e => e.Transactions.Sum(e => e.Value) - (e.Westeds.Sum(e => e.Value) + e.Attendances.Sum(e => e.BorrowValue) + e.BandLocationLeaderPeriodEmployees.Sum(e => e.BandLocationLeaderPeriodEmployeePeriods.Sum(e => e.BandLocationLeaderPeriodEmployeePeriodAttendances.Sum(e => e.BorrowValue)))))));
 
             CreateMap<Period, GlobalSinglePeriod>()
                 .ForMember(dest => dest.PeriodLeaders, src => src.MapFrom(e => e.BandLocationLeaderPeriods.Select(n => new PeriodLeaders

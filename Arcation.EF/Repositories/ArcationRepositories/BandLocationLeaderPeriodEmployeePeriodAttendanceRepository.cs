@@ -18,55 +18,25 @@ namespace Arcation.EF.Repositories.ArcationRepositories
             _context = context;
         }
 
-        public async Task<double> GetSumOfBorrowValue(IEnumerable<int> Ids)
-        {
-            double sum = 0;
-            foreach(int id in Ids)
-            {
-                sum += await  _context.BandLocationLeaderPeriodEmployeePeriodAttendances.Where(e => !e.IsDeleted && e.AttendanceId == id).Select(e => e.BorrowValue).FirstOrDefaultAsync();
-            }
-            return sum;
-        }
-        public double GetTotalCompanyBorrow(int? companyId)
+        public double GetTotalPaiedOfEmployeePeriodReoprt(int? periodId, string busniessId)
         {
             return _context.BandLocationLeaderPeriodEmployeePeriodAttendances
-                .Where(e => e.BandLocationLeaderPeriodEmployeePeriod.BandLocationLeaderPeriodEmployee.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.Location.CompanyId == companyId)
+                .Where(e => e.BandLocationLeaderPeriodEmployeePeriod.BandLocationLeaderPeriodEmployee.BandLocationLeaderPeriod.PeriodId == periodId && !e.IsDeleted && e.BusinessId == busniessId)
+                .Sum(e => e.BorrowValue + e.BandLocationLeaderPeriodEmployeePeriod.PayiedValue);
+        }
+
+        public double GetTotalBorrowOfEmployeePeriodReoprt(int? periodId, string busniessId)
+        {
+            return _context.BandLocationLeaderPeriodEmployeePeriodAttendances
+                .Where(e => e.BandLocationLeaderPeriodEmployeePeriod.BandLocationLeaderPeriodEmployee.BandLocationLeaderPeriod.PeriodId == periodId && !e.IsDeleted && e.BusinessId == busniessId)
                 .Sum(e => e.BorrowValue);
         }
 
-        public double GetTotalBandBorrow(int? bandId)
+        public double GetTotalSalaryOfEmployeePeriodReoprt(int? periodId, string busniessId)
         {
             return _context.BandLocationLeaderPeriodEmployeePeriodAttendances
-                .Where(e => e.BandLocationLeaderPeriodEmployeePeriod.BandLocationLeaderPeriodEmployee.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.Id == bandId)
-                .Sum(e => e.BorrowValue);
-        }
-
-        public double GetTotalLocationBorrow(int? locationId)
-        {
-            return _context.BandLocationLeaderPeriodEmployeePeriodAttendances
-                .Where(e => e.BandLocationLeaderPeriodEmployeePeriod.BandLocationLeaderPeriodEmployee.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.LocationId == locationId)
-                .Sum(e => e.BorrowValue);
-        }
-
-        public double GetTotalCompanyHours(int? companyId)
-        {
-            return _context.BandLocationLeaderPeriodEmployeePeriodAttendances
-                .Where(e => e.BandLocationLeaderPeriodEmployeePeriod.BandLocationLeaderPeriodEmployee.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.Location.CompanyId == companyId)
-                .Sum(e => e.WorkingHours);
-        }
-
-        public double GetTotalBandHours(int? bandId)
-        {
-            return _context.BandLocationLeaderPeriodEmployeePeriodAttendances
-                .Where(e => e.BandLocationLeaderPeriodEmployeePeriod.BandLocationLeaderPeriodEmployee.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.Id == bandId)
-                .Sum(e => e.WorkingHours);
-        }
-
-        public double GetTotalLocationHours(int? locationId)
-        {
-            return _context.BandLocationLeaderPeriodEmployeePeriodAttendances
-                .Where(e => e.BandLocationLeaderPeriodEmployeePeriod.BandLocationLeaderPeriodEmployee.BandLocationLeaderPeriod.BandLocationLeader.BandLocation.LocationId == locationId)
-                .Sum(e => e.WorkingHours);
+                .Where(e => e.BandLocationLeaderPeriodEmployeePeriod.BandLocationLeaderPeriodEmployee.BandLocationLeaderPeriod.PeriodId == periodId && !e.IsDeleted && e.BusinessId == busniessId)
+                .Sum(e => e.WorkingHours * e.BandLocationLeaderPeriodEmployeePeriod.EmployeeSalary);
         }
 
         public double GetBandLocationInnerReport(int? bandLocationId, string businessId)

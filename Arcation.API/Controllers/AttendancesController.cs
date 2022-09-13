@@ -220,7 +220,7 @@ namespace Arcation.API.Controllers
                         queryAttendance.ended = true;
                         await _unitOfWork.Complete();
 
-                        var finalResult = await _unitOfWork.Attendances.GetAttendance(queryAttendance.Id, queryAttendance.BandLocationLeaderPeriodId);
+                        var finalResult = await _unitOfWork.Attendances.GetAttendance(attendanceId, queryAttendance.BandLocationLeaderPeriodId);
                         List<AttendanceEmployeeDto> attendanceDto = AttendanceHelper(finalResult);
                         return Ok(attendanceDto);
 
@@ -296,7 +296,7 @@ namespace Arcation.API.Controllers
 
             attendanceDto.Add(leaderDto);
 
-            foreach (var employee in attendance.BandLocationLeaderPeriodEmployeePeriodAttendances)
+            foreach (var employee in attendance.BandLocationLeaderPeriodEmployeePeriodAttendances.Where(e => !e.IsDeleted))
             {
                 AttendanceEmployeeDto dto = new AttendanceEmployeeDto
                 {

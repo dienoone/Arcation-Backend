@@ -9,14 +9,12 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
 {
     public interface IBandLocationLeaderPeriodRepository : IBaseRepository<BandLocationLeaderPeriod>
     {
+        Task<List<int>> GetPeriodIds(int? bandLocationLeaderId, string businessId);
         Task<BandLocationLeaderPeriod> GetLeaderPeriodDetail(int? bandLocationLeaderPeriodId, string businessId);
         Task<BandLocationLeaderPeriod> GetLeaderPeriodFinish(int? bandLocationLeaderPeriodId, string businessId);
         Task<IEnumerable<BandLocationLeaderPeriod>> GetPeriods(int? bandLocationLeaderId, string LeaderId, string businessID);
-        double GetTotalCompanyPaied(int? companyId);
-        double GetTotalBandPaied(int? bandId);
-        double GetTotalLocationPaied(int? locationId);
-        double GetTotalCompanySalary(int? companyId);
-        double GetTotalBandSalary(int? bandId);
-        double GetTotalLocationSalary(int? locationId);
+        int GetPeriodConutOfLeadersReport(int? periodId, string busniessId);
+        Task<IEnumerable<BandLocationLeaderPeriod>> GetPeriodsAsync(int? periodId, string businessId);
+
     }
 }
