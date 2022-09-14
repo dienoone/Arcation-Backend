@@ -62,24 +62,18 @@ namespace Arcation.API.Controllers
         {
             if (ModelState.IsValid)
             {
-                Income IsExist = await _unitOfWork.Incomes.FindAsync(i => i.BusinessId == HttpContext.GetBusinessId() && i.Estatement == dto.Estatement);
-                if (IsExist == null)
-                {
-                    Income newIncome = _mapper.Map<Income>(dto);
-                    newIncome.IsDeleted = false;
-                    newIncome.CreatedBy = HttpContext.GetUserId();
-                    newIncome.CreatedAt = DateTime.UtcNow;
-                    newIncome.BusinessId = HttpContext.GetBusinessId();
+                Income newIncome = _mapper.Map<Income>(dto);
+                newIncome.IsDeleted = false;
+                newIncome.CreatedBy = HttpContext.GetUserId();
+                newIncome.CreatedAt = DateTime.UtcNow;
+                newIncome.BusinessId = HttpContext.GetBusinessId();
 
-                    await _unitOfWork.Incomes.AddAsync(newIncome);
-                    if(await _unitOfWork.Complete())
-                    {
-                        return CreatedAtRoute("GetIncome", new { controller = "Incomes", id = newIncome.IncomeId , bandLocationId = newIncome.BandLocationId }, _mapper.Map<IncomeDto>(newIncome));
-                    }
-                    return BadRequest();
-                    
+                await _unitOfWork.Incomes.AddAsync(newIncome);
+                if (await _unitOfWork.Complete())
+                {
+                    return CreatedAtRoute("GetIncome", new { controller = "Incomes", id = newIncome.IncomeId, bandLocationId = newIncome.BandLocationId }, _mapper.Map<IncomeDto>(newIncome));
                 }
-                return BadRequest("هذا الاسم موجود بالفعل");
+                return BadRequest();
 
             }
             return BadRequest(ModelState);
@@ -100,13 +94,8 @@ namespace Arcation.API.Controllers
                         queryIncome.Note = dto.Note;
                         queryIncome.Price = dto.Price;
                         queryIncome.Date = dto.Date;
-
-                        if(await _unitOfWork.Complete())
-                        {
-                            return Ok(_mapper.Map<IncomeDto>(queryIncome));
-                        }
-                        return BadRequest();
-                        
+                        await _unitOfWork.Complete();
+                        return Ok(_mapper.Map<IncomeDto>(queryIncome));
                     }
                     return NotFound();
                 }
@@ -130,7 +119,7 @@ namespace Arcation.API.Controllers
                         queryIncome.IsDeleted = true;
                         if(await _unitOfWork.Complete())
                         {
-                            return new NoContentResult();
+                            return NoContent();
                         }
                         return BadRequest();                       
                     }

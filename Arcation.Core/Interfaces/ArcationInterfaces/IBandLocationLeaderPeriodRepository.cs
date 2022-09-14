@@ -13,6 +13,7 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
         Task<BandLocationLeaderPeriod> GetLeaderPeriodDetail(int? bandLocationLeaderPeriodId, string businessId);
         Task<BandLocationLeaderPeriod> GetLeaderPeriodFinish(int? bandLocationLeaderPeriodId, string businessId);
         Task<IEnumerable<BandLocationLeaderPeriod>> GetPeriods(int? bandLocationLeaderId, string LeaderId, string businessID);
+        Task<IEnumerable<BandLocationLeaderPeriod>> GetSearchPeriods(int? bandLocationLeaderId, string LeaderId, string businessID, string name);
         int GetPeriodConutOfLeadersReport(int? periodId, string busniessId);
         Task<IEnumerable<BandLocationLeaderPeriod>> GetPeriodsAsync(int? periodId, string businessId);
 

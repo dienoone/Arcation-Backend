@@ -62,24 +62,18 @@ namespace Arcation.API.Controllers
         {
             if (ModelState.IsValid)
             {
-                BLWested IsExist = await _unitOfWork.BLWesteds.FindAsync(e => e.BusinessId == HttpContext.GetBusinessId() && e.Estatement == dto.Estatement);
-                if (IsExist == null)
-                {
-                    BLWested newBLWested = _mapper.Map<BLWested>(dto);
-                    newBLWested.IsDeleted = false;
-                    newBLWested.CreatedAt = DateTime.UtcNow;
-                    newBLWested.CreatedBy = HttpContext.GetUserId();
-                    newBLWested.BusinessId = HttpContext.GetBusinessId();
+                BLWested newBLWested = _mapper.Map<BLWested>(dto);
+                newBLWested.IsDeleted = false;
+                newBLWested.CreatedAt = DateTime.UtcNow;
+                newBLWested.CreatedBy = HttpContext.GetUserId();
+                newBLWested.BusinessId = HttpContext.GetBusinessId();
 
-                    await _unitOfWork.BLWesteds.AddAsync(newBLWested);
-                    if(await _unitOfWork.Complete())
-                    {
-                        return CreatedAtRoute("GetBLWested", new { controller = "BLWesteds", id = newBLWested.Id , bandLocationId = newBLWested.BandLocationId }, _mapper.Map<BLWestedDto>(newBLWested));
-                    }
-                    return BadRequest();
-                    
+                await _unitOfWork.BLWesteds.AddAsync(newBLWested);
+                if (await _unitOfWork.Complete())
+                {
+                    return CreatedAtRoute("GetBLWested", new { controller = "BLWesteds", id = newBLWested.Id, bandLocationId = newBLWested.BandLocationId }, _mapper.Map<BLWestedDto>(newBLWested));
                 }
-                return BadRequest("هذا الاسم موجود بالفعل");
+                return BadRequest();
 
             }
             return BadRequest(ModelState);
@@ -100,13 +94,8 @@ namespace Arcation.API.Controllers
                         queryBLWested.Date = dto.Date;
                         queryBLWested.Note = dto.Note;
                         queryBLWested.Price = dto.Price;
-
-                        if(await _unitOfWork.Complete())
-                        {
-                            return Ok(_mapper.Map<BLWestedDto>(queryBLWested));
-                        }
-                        return BadRequest();
-                        
+                        await _unitOfWork.Complete();
+                        return Ok(_mapper.Map<BLWestedDto>(queryBLWested));
                     }
                     return NotFound();
                 }
@@ -126,14 +115,12 @@ namespace Arcation.API.Controllers
                     BLWested queryBLWested = await _unitOfWork.BLWesteds.FindAsync(b => b.Id == id);
                     if (queryBLWested != null)
                     {
-
                         queryBLWested.IsDeleted = true;
                         if(await _unitOfWork.Complete())
                         {
-                            return new NoContentResult();
+                            return NoContent();
                         }
-                        return BadRequest();
-                        
+                        return BadRequest();  
                     }
                     return NotFound();
                 }

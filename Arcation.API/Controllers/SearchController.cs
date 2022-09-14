@@ -584,6 +584,125 @@ namespace Arcation.API.Controllers
 
         #endregion
 
+        #region LeaderApp:
+
+        // api/Search/LeaderApp/Location/{name}
+        [HttpGet("LeaderApp/Location/{name}")]
+        public async Task<IActionResult> SearchLeaderAppLocations([FromRoute] string name)
+        {
+            BusinessId = HttpContext.GetBusinessId();
+            string UserID = HttpContext.GetUserId();
+            if (name != null)
+            {
+                Leader queryLeader = await _unitOfWork.Leaders.GetLeaderDetail(UserID, BusinessId);
+
+                if (queryLeader != null)
+                {
+                    var locations = await _unitOfWork.Locations.SearchLocaionsWithBandsRelatedToLeader(UserID, BusinessId, name);
+                    var list = new List<LeaderLocations>();
+                    var locationIds = queryLeader.BandLocationLeaders.Select(e => e.BandLocation.LocationId);
+
+                    foreach (int LocationId in locationIds)
+                    {
+                        Location queryLocation = await _unitOfWork.Locations.FindAsync(e => e.Id == LocationId);
+                        var bandIds = queryLeader.BandLocationLeaders.Where(e => e.BandLocation.LocationId == LocationId).Select(e => e.BandLocation.BandId);
+                        List<LeaderLocationBands> leaderLocationBands = new();
+
+                        foreach (int bandId in bandIds)
+                        {
+
+                            Band queryBand = await _unitOfWork.Bands.FindAsync(e => e.Id == bandId);
+                            BandLocationLeader queryBandLocationLeader = queryLeader.BandLocationLeaders.FirstOrDefault(e => e.BandLocation.LocationId == LocationId && e.BandLocation.BandId == bandId);
+                            LeaderLocationBands leaderLocationBands1 = new LeaderLocationBands
+                            {
+                                BandId = bandId,
+                                BandName = queryBand.BandName,
+                                BandLocationLeaderId = queryBandLocationLeader.Id
+                            };
+                            leaderLocationBands.Add(leaderLocationBands1);
+                        }
+
+                        LeaderLocations result = new LeaderLocations
+                        {
+                            LocationName = queryLocation.LocationName,
+                            LocationId = LocationId,
+                            BandLocations = leaderLocationBands
+
+                        };
+                        list.Add(result);
+                    }
+                    return Ok(list);
+                }
+                return NotFound();
+            }
+            else
+            {
+
+                Leader queryLeader = await _unitOfWork.Leaders.GetLeaderDetail(UserID, BusinessId);
+                if (queryLeader != null)
+                {
+                    var locations = await _unitOfWork.Locations.LocaionsWithBandsRelatedToLeader(UserID, BusinessId);
+                    var list = new List<LeaderLocations>();
+                    var locationIds = queryLeader.BandLocationLeaders.Select(e => e.BandLocation.LocationId);
+
+                    foreach (int LocationId in locationIds)
+                    {
+                        Location queryLocation = await _unitOfWork.Locations.FindAsync(e => e.Id == LocationId);
+                        var bandIds = queryLeader.BandLocationLeaders.Where(e => e.BandLocation.LocationId == LocationId).Select(e => e.BandLocation.BandId);
+                        List<LeaderLocationBands> leaderLocationBands = new();
+
+                        foreach (int bandId in bandIds)
+                        {
+
+                            Band queryBand = await _unitOfWork.Bands.FindAsync(e => e.Id == bandId);
+                            BandLocationLeader queryBandLocationLeader = queryLeader.BandLocationLeaders.FirstOrDefault(e => e.BandLocation.LocationId == LocationId && e.BandLocation.BandId == bandId);
+                            LeaderLocationBands leaderLocationBands1 = new LeaderLocationBands
+                            {
+                                BandId = bandId,
+                                BandName = queryBand.BandName,
+                                BandLocationLeaderId = queryBandLocationLeader.Id
+                            };
+                            leaderLocationBands.Add(leaderLocationBands1);
+                        }
+
+                        LeaderLocations result = new LeaderLocations
+                        {
+                            LocationName = queryLocation.LocationName,
+                            LocationId = LocationId,
+                            BandLocations = leaderLocationBands
+
+                        };
+                        list.Add(result);
+                    }
+                    return Ok(list);
+                }
+                return NotFound();
+            }
+        }
+
+        // api/Search/LeaderApp/periods/{name}
+        [HttpGet("LeaderApp/periods/{bandLocationLeaderId}/period/{name}")]
+        public async Task<IActionResult> SearchLeaderAppPeriods([FromRoute] int? bandLocationLeaderId, [FromRoute] string name)
+        {
+            if(bandLocationLeaderId != null)
+            {
+                BusinessId = HttpContext.GetBusinessId();
+                if (name != null)
+                {
+                    var periods = await _unitOfWork.BandLocationLeaderPeriods.GetSearchPeriods(bandLocationLeaderId, HttpContext.GetUserId(), HttpContext.GetBusinessId(), name);
+                    return Ok(_mapper.Map<IEnumerable<PeriodsLeaderApp>>(periods));
+                }
+                else
+                {
+                    var periods = await _unitOfWork.BandLocationLeaderPeriods.GetPeriods(bandLocationLeaderId, HttpContext.GetUserId(), HttpContext.GetBusinessId());
+                    return Ok(_mapper.Map<IEnumerable<PeriodsLeaderApp>>(periods));
+                }
+            }
+            return NotFound();
+        }
+
+        #endregion
+
         #region Helpers:
 
         private List<AttendanceEmployeeDto> AttendanceHelper(Attendance attendance)

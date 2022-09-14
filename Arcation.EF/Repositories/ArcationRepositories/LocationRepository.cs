@@ -53,6 +53,13 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .Where(e => e.BusinessId == BusinessId && e.BandLocations.Any(e => e.BandLocationLeaders.Any(e => e.LeaderId == leaderId && e.BusinessId == BusinessId))).ToListAsync();
         }
 
+        public async Task<IEnumerable<Location>> SearchLocaionsWithBandsRelatedToLeader(string leaderId, string BusinessId, string name)
+        {
+            return await _context.Locations
+                .Include(e => e.BandLocations.Where(e => e.BandLocationLeaders.Any(e => e.LeaderId == leaderId) && !e.IsDeleted)).ThenInclude(e => e.Band)
+                .Where(e => e.BusinessId == BusinessId && !e.IsDeleted && e.LocationName.Contains(name) && e.BandLocations.Any(e => e.BandLocationLeaders.Any(e => e.LeaderId == leaderId && e.BusinessId == BusinessId))).ToListAsync();
+        }
+
         public async Task<Location> GetLocationReport(int? locationId, string businessId)
         {
             return await _context.Locations
