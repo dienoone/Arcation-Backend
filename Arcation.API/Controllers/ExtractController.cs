@@ -67,35 +67,29 @@ namespace Arcation.API.Controllers
         {
             if (bandLocationId != null)
             {
-                Extract isExist = await _unitOfWork.Extracts.FindAsync(e => e.ExtractName == model.ExtractName && e.BandLocationId == bandLocationId && e.BusinessId == HttpContext.GetBusinessId());
-                if (isExist == null)
+                Extract newExtract = new Extract
                 {
-                    Extract newExtract = new Extract
-                    {
-                        ExtractName = model.ExtractName,
-                        TotalPrice = model.TotalPrice,
-                        BusinessId = HttpContext.GetBusinessId(),
-                        IsDeleted = false,
-                        CreatedAt = DateTime.UtcNow,
-                        CreatedBy = HttpContext.GetUserId(),
-                        BandLocationId = (int)bandLocationId
-                    };
+                    ExtractName = model.ExtractName,
+                    TotalPrice = model.TotalPrice,
+                    BusinessId = HttpContext.GetBusinessId(),
+                    IsDeleted = false,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = HttpContext.GetUserId(),
+                    BandLocationId = (int)bandLocationId
+                };
 
-                    Extract result = await _unitOfWork.Extracts.AddAsync(newExtract);
+                Extract result = await _unitOfWork.Extracts.AddAsync(newExtract);
 
-                    if (result != null && await _unitOfWork.Complete())
+                if (result != null && await _unitOfWork.Complete())
+                {
+                    Extract entity = await _unitOfWork.Extracts.GetExtractAsync(result.ExtractId, HttpContext.GetBusinessId());
+                    if (entity != null)
                     {
-                        Extract entity = await _unitOfWork.Extracts.GetExtractAsync(result.ExtractId, HttpContext.GetBusinessId());
-                        if (entity != null)
-                        {
-                            return Ok(_mapper.Map<AllExtracts>(entity));
-                        }
-                        return NotFound();
+                        return Ok(_mapper.Map<AllExtracts>(entity));
                     }
-                    return BadRequest();
-
+                    return NotFound();
                 }
-                return BadRequest("هذا الاسم موجود بالفعل");
+                return BadRequest();
             }
             return NotFound();
         }

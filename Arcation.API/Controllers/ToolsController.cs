@@ -33,32 +33,26 @@ namespace Arcation.API.Controllers
         {
             if (ModelState.IsValid)
             {
-                var isExist = await _unitOfWork.Tools.FindAsync(e => e.ToolName == model.ToolName);
-                if (isExist == null)
+                Tool newTool = new Tool
                 {
-                    Tool newTool = new Tool
-                    {
-                        ToolName = model.ToolName,
-                        Count = model.ToolCount,
-                        BusinessId = HttpContext.GetBusinessId(),
-                        CreatedAt = DateTime.UtcNow,
-                        CreatedBy = HttpContext.GetUserId(),
-                        IsDeleted = false
-                    };
+                    ToolName = model.ToolName,
+                    Count = model.ToolCount,
+                    BusinessId = HttpContext.GetBusinessId(),
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = HttpContext.GetUserId(),
+                    IsDeleted = false
+                };
 
-                    var result = await _unitOfWork.Tools.AddAsync(newTool);
-                    if (result != null)
+                var result = await _unitOfWork.Tools.AddAsync(newTool);
+                if (result != null)
+                {
+                    if (await _unitOfWork.Complete())
                     {
-                        if (await _unitOfWork.Complete())
-                        {
-                            return Ok(_mapper.Map<ToolViewModel>(result));
-                        }
-                        return BadRequest();
+                        return Ok(_mapper.Map<ToolViewModel>(result));
                     }
                     return BadRequest();
-
                 }
-                return BadRequest("هذا الاسم موجود بالفعل");
+                return BadRequest();
             }
             return BadRequest(ModelState);
         }

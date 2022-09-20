@@ -20,6 +20,14 @@ namespace Arcation.EF.Repositories.ArcationRepositories
             _context = context;
         }
 
+        public async Task<Location> LocationAsync(int locationId)
+        {
+            return await _context.Locations
+                .Include(e => e.BandLocations.Where(e => !e.IsDeleted))
+                .ThenInclude(e => e.Band)
+                .FirstOrDefaultAsync(e => e.Id == locationId && !e.IsDeleted);
+        }
+
         public async Task<List<Location>> GetAllLocationsAsync(string userID, int? companyId)
         {
             return await _context.Locations.Include(src => src.BandLocations.Where(e => e.IsDeleted == false))

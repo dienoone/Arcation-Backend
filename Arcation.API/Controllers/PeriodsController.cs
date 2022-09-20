@@ -125,36 +125,30 @@ namespace Arcation.API.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    Period isExist = await _unitOfWork.Periods.FindAsync(e => e.Name == dto.Name && e.BusinessId == HttpContext.GetBusinessId() && e.BandLocationId == BandLocationId && !e.IsDeleted);
-                    if (isExist == null)
+                    Period newPeriod = new Period
                     {
-                        Period newPeriod = new Period
-                        {
-                            Name = dto.Name,
-                            BandLocationId = (int)BandLocationId,
-                            StartingDate = DateTime.UtcNow,
-                            EndingDate = null,
-                            State = true,
-                            IsDeleted = false,
-                            CreatedAt = DateTime.UtcNow,
-                            CreatedBy = HttpContext.GetUserId(),
-                            BusinessId = HttpContext.GetBusinessId()
-                        };
-                        var result = await _unitOfWork.Periods.AddAsync(newPeriod);
+                        Name = dto.Name,
+                        BandLocationId = (int)BandLocationId,
+                        StartingDate = DateTime.UtcNow,
+                        EndingDate = null,
+                        State = true,
+                        IsDeleted = false,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = HttpContext.GetUserId(),
+                        BusinessId = HttpContext.GetBusinessId()
+                    };
 
-                        if (result != null)
-                        {
-                            if (await _unitOfWork.Complete())
-                            {
+                    var result = await _unitOfWork.Periods.AddAsync(newPeriod);
 
-                                return CreatedAtRoute("GetPeriod", new { controller = "Periods", id = result.Id }, "Added");
-                            }
-                            return BadRequest();
+                    if (result != null)
+                    {
+                        if (await _unitOfWork.Complete())
+                        {
+                            return CreatedAtRoute("GetPeriod", new { controller = "Periods", id = result.Id }, "Added");
                         }
                         return BadRequest();
-
                     }
-                    return BadRequest("هذا الاسم موجود بالفعل");
+                    return BadRequest();
                 }
                 return BadRequest(ModelState);
             }

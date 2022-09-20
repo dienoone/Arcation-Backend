@@ -47,17 +47,17 @@ namespace Arcation.EF.Repositories.ArcationRepositories
 
         public double GetCompanyGlobalReport(int? companyId, string busiessId)
         {
-            return _context.BLWesteds
+            return _context.Bills
                 .Where(e => e.BandLocation.Location.CompanyId == companyId && !e.IsDeleted && e.BusinessId == busiessId)
-                .Sum(e => e.Price);
+                .Sum(e => e.BillPrice);
 
         }
 
         public double GetLocationGlobalReport(int? locationId, string busiessId)
         {
-            return _context.BLWesteds
+            return _context.Bills
                 .Where(e => e.BandLocation.LocationId == locationId && !e.IsDeleted && e.BusinessId == busiessId)
-                .Sum(e => e.Price);
+                .Sum(e => e.BillPrice);
 
         }
 

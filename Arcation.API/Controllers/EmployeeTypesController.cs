@@ -66,21 +66,16 @@ namespace Arcation.API.Controllers
         {
             if (ModelState.IsValid)
             {
-                var IsExist = await _unitOfWork.EmployeeTypes.FindAsync(t => t.BusinessId == HttpContext.GetBusinessId() && t.Type == model.Type && !t.IsDeleted);
-                if(IsExist == null)
-                {
-                    EmployeeType newType = _mapper.Map<EmployeeType>(model);
-                    newType.IsDeleted = false;
-                    newType.CreatedAt = DateTime.UtcNow;
-                    newType.CreatedBy = HttpContext.GetUserId();
-                    newType.BusinessId = HttpContext.GetBusinessId();
+                EmployeeType newType = _mapper.Map<EmployeeType>(model);
+                newType.IsDeleted = false;
+                newType.CreatedAt = DateTime.UtcNow;
+                newType.CreatedBy = HttpContext.GetUserId();
+                newType.BusinessId = HttpContext.GetBusinessId();
 
-                    var isAdded = await _unitOfWork.EmployeeTypes.AddAsync(newType);
-                    if (await _unitOfWork.Complete() && isAdded != null)
-                    {
-                        return CreatedAtRoute("GetEmployeeType", new { controller = "EmployeeTypes", id = newType.Id }, _mapper.Map<EmployeeTypeDto>(newType));
-                    }
-                    return BadRequest();
+                var isAdded = await _unitOfWork.EmployeeTypes.AddAsync(newType);
+                if (await _unitOfWork.Complete() && isAdded != null)
+                {
+                    return CreatedAtRoute("GetEmployeeType", new { controller = "EmployeeTypes", id = newType.Id }, _mapper.Map<EmployeeTypeDto>(newType));
                 }
                 return BadRequest();
             }
@@ -125,7 +120,7 @@ namespace Arcation.API.Controllers
                         _unitOfWork.EmployeeTypes.Update(queryType);
                         await _unitOfWork.Complete();
 
-                        return new NoContentResult();
+                        return NoContent();
                     }
                     return NotFound();
                 }

@@ -45,7 +45,7 @@ namespace Arcation.API.Controllers
             IEnumerable<Employee> entities = await _unitOfWork.Employees.GetAllIncludeTypes(HttpContext.GetBusinessId());
             if (entities != null)
             {
-                return Ok(_mapper.Map<IEnumerable<EmployeePageDto>>(entities));
+                return Ok(_mapper.Map<IEnumerable<EmployeeDetailsDto>>(entities));
             }
             return NoContent();
         }
@@ -110,15 +110,9 @@ namespace Arcation.API.Controllers
                     }
 
                     double employeeSalary = totalDays * bandLocationLeaderPeriodEmployeePeriod.EmployeeSalary;
-                    double totalPaied = bandLocationLeaderPeriodEmployeePeriod.PayiedValue + dto.PayiedValue;
-                    double remainder = employeeSalary - totalPaied - borrowValue;
-                    if (remainder < 0)
-                    {
-                        return BadRequest();
-                    }
 
                     bandLocationLeaderPeriodEmployeePeriod.PayiedValue += dto.PayiedValue;
-                    if (bandLocationLeaderPeriodEmployeePeriod.PayiedValue == employeeSalary)
+                    if (bandLocationLeaderPeriodEmployeePeriod.PayiedValue >= employeeSalary)
                     {
                         bandLocationLeaderPeriodEmployeePeriod.State = true;
                     }
@@ -227,73 +221,31 @@ namespace Arcation.API.Controllers
         {
             if (ModelState.IsValid)
             {
-                Employee isExist = await _unitOfWork.Employees.FindAsync(e => e.Name == dto.Name && e.BusinessId == HttpContext.GetBusinessId());
-                if (isExist == null)
+                Employee newEmployee = new Employee
                 {
-                    Employee newEmployee = new Employee
-                    {
-                        Name = dto.Name,
-                        Phone = dto.Phone,
-                        Salary = dto.Salary,
-                        TypeId = dto.TypeId,
-                        IsDeleted = false,
-                        CreatedAt = DateTime.UtcNow,
-                        CreatedBy = HttpContext.GetUserId(),
-                        BusinessId = HttpContext.GetBusinessId()
-                    };
+                    Name = dto.Name,
+                    Phone = dto.Phone,
+                    Salary = dto.Salary,
+                    TypeId = dto.TypeId,
+                    IsDeleted = false,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = HttpContext.GetUserId(),
+                    BusinessId = HttpContext.GetBusinessId()
+                };
 
-                    // ----- This Part Related To Photos ---------
-                    string photo = "photo";
-                    string IdentityPhoto = "IdentityPhoto";
-                    if (dto.Photo != null)
-                    {
-                        if (dto.Photo.Length > 0)
-                        {
-                            photo = await _imageHandler.UploadImage(dto.Photo);
-                            if (photo == "Invalid image file") return BadRequest();
-                        }
-                    }
-                    if (dto.IdentityPhoto != null)
-                    {
-                        if (dto.IdentityPhoto.Length > 0)
-                        {
-                            IdentityPhoto = await _imageHandler.UploadImage(dto.IdentityPhoto);
-                            if (IdentityPhoto == "Invalid image file") return BadRequest();
-                        }
-                    }
-                    if (photo != "photo")
-                    {
-                        newEmployee.Photo = _appURL.AppUrl + photo;
-                    }
-                    else
-                    {
-                        newEmployee.Photo = null;
-                    }
-                    if (IdentityPhoto != "IdentityPhoto")
-                    {
-                        newEmployee.IdentityPhoto = _appURL.AppUrl + IdentityPhoto;
-                    }
-                    else
-                    {
-                        newEmployee.IdentityPhoto = null;
-                    }
-                    // --------------- End Region ----------------
+               
+                var result = await _unitOfWork.Employees.AddAsync(newEmployee);
 
-                    var result = await _unitOfWork.Employees.AddAsync(newEmployee);
-
-                    if (result != null)
+                if (result != null)
+                {
+                    if (await _unitOfWork.Complete())
                     {
-                        if (await _unitOfWork.Complete())
-                        {
-                            var getEmployee = await _unitOfWork.Employees.GetEmployeeIncludeTypes(newEmployee.Id, HttpContext.GetBusinessId());
-                            return CreatedAtRoute("GetEmployee", new { controller = "Employees", id = newEmployee.Id }, _mapper.Map<EmployeeDetailsDto>(getEmployee));
-                        }
-                        return BadRequest();
+                        var getEmployee = await _unitOfWork.Employees.GetEmployeeIncludeTypes(newEmployee.Id, HttpContext.GetBusinessId());
+                        return CreatedAtRoute("GetEmployee", new { controller = "Employees", id = newEmployee.Id }, _mapper.Map<EmployeeDetailsDto>(getEmployee));
                     }
                     return BadRequest();
-
                 }
-                return BadRequest("هذا الاسم موجود بالفعل");
+                return BadRequest();
             }
             return BadRequest(ModelState);
         }
@@ -306,36 +258,16 @@ namespace Arcation.API.Controllers
             {
                 if (id != null)
                 {
-                    Employee queryEmployee = await _unitOfWork.Employees.FindAsync(b => b.Id == id && b.BusinessId == HttpContext.GetUserId());
+                    Employee queryEmployee = await _unitOfWork.Employees.FindAsync(b => b.Id == id && b.BusinessId == HttpContext.GetBusinessId());
                     if (queryEmployee != null)
                     {
-
-                        if (queryEmployee.Name == dto.Name)
-                        {
-                            queryEmployee.Name = dto.Name;
-                            queryEmployee.Phone = dto.Phone;
-                            queryEmployee.Salary = dto.Salary;
-                            queryEmployee.TypeId = dto.TypeId;
-                            await _unitOfWork.Complete();
-                            var getEmployee = await _unitOfWork.Employees.GetEmployeeIncludeTypes(queryEmployee.Id, HttpContext.GetBusinessId());
-                            return Ok(_mapper.Map<EmployeeDetailsDto>(getEmployee));
-                        }
-                        else
-                        {
-                            Employee isExist = await _unitOfWork.Employees.FindAsync(b => b.Name == dto.Name && b.BusinessId == HttpContext.GetUserId() && !b.IsDeleted);
-                            if (isExist == null)
-                            {
-                                queryEmployee.Name = dto.Name;
-                                queryEmployee.Phone = dto.Phone;
-                                queryEmployee.Salary = dto.Salary;
-                                queryEmployee.TypeId = dto.TypeId;
-                                await _unitOfWork.Complete();
-                                var getEmployee = await _unitOfWork.Employees.GetEmployeeIncludeTypes(queryEmployee.Id, HttpContext.GetBusinessId());
-                                return Ok(_mapper.Map<EmployeeDetailsDto>(getEmployee));
-
-                            }
-                            return BadRequest("This is name Already Exist");
-                        }
+                        queryEmployee.Name = dto.Name;
+                        queryEmployee.Phone = dto.Phone;
+                        queryEmployee.Salary = dto.Salary;
+                        queryEmployee.TypeId = dto.TypeId;
+                        await _unitOfWork.Complete();
+                        var getEmployee = await _unitOfWork.Employees.GetEmployeeIncludeTypes(queryEmployee.Id, HttpContext.GetBusinessId());
+                        return Ok(_mapper.Map<EmployeeDetailsDto>(getEmployee));
                     }
                     return NotFound("This employee doesn't exist !!");
 

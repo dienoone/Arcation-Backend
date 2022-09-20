@@ -21,7 +21,6 @@ namespace Arcation.EF.Repositories.ArcationRepositories
         public async Task<IEnumerable<Extract>> GetExtractsAsync(int? bandLocationId, string businessId)
         {
             return await _context.Extracts
-                .Include(e => e.ExtractRows)
                 .Where(e => e.BandLocationId == bandLocationId && e.BusinessId == businessId)
                 .ToListAsync();
         }
@@ -29,7 +28,6 @@ namespace Arcation.EF.Repositories.ArcationRepositories
         public async Task<Extract> GetExtractAsync(int? extractId, string businessId)
         {
             return await _context.Extracts
-                .Include(e => e.ExtractRows)
                 .FirstOrDefaultAsync(e => e.ExtractId == extractId && e.BusinessId == businessId);
         }
 

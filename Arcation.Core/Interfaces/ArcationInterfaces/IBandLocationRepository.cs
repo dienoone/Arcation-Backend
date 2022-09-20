@@ -10,6 +10,7 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
     public interface IBandLocationRepository : IBaseRepository<BandLocation>
     {
         Task<List<int>> GetBandsId(int locationId);
+        Task<List<int>> GetLocationIds(int bandLocationId);
         Task<BandLocation> GetBandLocationReport(int? bandLocationId, string businessId);
 
 

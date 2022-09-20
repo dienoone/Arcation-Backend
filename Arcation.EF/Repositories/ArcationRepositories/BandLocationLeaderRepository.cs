@@ -18,6 +18,28 @@ namespace Arcation.EF.Repositories.ArcationRepositories
             _context = context;
         }
 
+        public List<int> GetLocationIdsForLeader(string leaderId, string businessId)
+        {
+            return _context.BandLocationLeaders
+                .Where(e => e.LeaderId == leaderId && e.BusinessId == businessId && !e.IsDeleted)
+                .Select(e => e.BandLocation.LocationId)
+                .Distinct()
+                .ToList();
+        }
+        public BandLocationLeader GetForLeader(string leaderId, int locationId)
+        {
+            return  _context.BandLocationLeaders
+            .FirstOrDefault(e => e.LeaderId == leaderId && e.BandLocation.LocationId == locationId);
+        }
+        public List<int> GetBandIdsForLeaderLocation(int locationId, string leaderId)
+        {
+            return _context.BandLocationLeaders
+                .Where(e => e.BandLocation.LocationId == locationId && !e.BandLocation.IsDeleted && e.LeaderId == leaderId)
+                .Select(e => e.BandLocation.BandId)
+                .ToList();
+        }
+
+
         public async Task<IEnumerable<BandLocationLeader>> GetLeadersWithPeriods(int? bandLocationId, string businessId)
         {
             return await _context.BandLocationLeaders.Include(bll => bll.Leader)
@@ -93,6 +115,14 @@ namespace Arcation.EF.Repositories.ArcationRepositories
                 .Count();
         }
 
+        public async Task<IEnumerable<BandLocationLeader>> GetLeaderApp(string userId, string businessId)
+        {
+             return await _context.BandLocationLeaders
+                .Where(e => e.LeaderId == userId && e.BusinessId == businessId && !e.IsDeleted && !e.BandLocation.IsDeleted && !e.BandLocation.Band.IsDeleted)
+                .ToListAsync();
+                
+        }
 
+        
     }
 }

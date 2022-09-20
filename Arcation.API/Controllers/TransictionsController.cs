@@ -100,12 +100,8 @@ namespace Arcation.API.Controllers
                         queryTransiction.Value = dto.Value;
                         queryTransiction.Date = dto.Date;
                         queryTransiction.Note = dto.Note;
-
-                        if (await _unitOfWork.Complete())
-                        {
-                            return Ok(_mapper.Map<TransictionDto>(queryTransiction));
-                        }
-                        return BadRequest();
+                        await _unitOfWork.Complete();
+                        return Ok(_mapper.Map<TransictionDto>(queryTransiction));
                     }
                     return NotFound();
                 }
@@ -124,12 +120,8 @@ namespace Arcation.API.Controllers
                 if (queryTransiction != null)
                 {
                     queryTransiction.IsDeleted = true;
-                    var result = _unitOfWork.LeaderTransactions.Update(queryTransiction);
-                    if (result != null && await _unitOfWork.Complete())
-                    {
-                        return new NoContentResult();
-                    }
-                    return BadRequest();
+                    await _unitOfWork.Complete();
+                    return NoContent();
                 }
                 return NotFound();
             }

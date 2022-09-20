@@ -20,5 +20,9 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
         int NumberOfLeadersCompany(int? companyId, string businessId);
         int NumberOfLeadersLocation(int? locationId, string businessId);
         int NumberOfLeadersBand(int? bandId, string businessId);
+
+        List<int> GetLocationIdsForLeader(string leaderId, string businessId);
+        BandLocationLeader GetForLeader(string leaderId, int locationId);
+        List<int> GetBandIdsForLeaderLocation(int locationId, string leaderId);
     }
 }

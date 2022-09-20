@@ -10,6 +10,7 @@ namespace Arcation.Core.Interfaces.ArcationInterfaces
 {
     public interface ILocationRepository : IBaseRepository<Location>
     {
+        Task<Location> LocationAsync(int locationId);
         Task<List<Location>> GetAllLocationsAsync(string userID, int? companyId);
         Task<Location> GetLocation(string BusinessId, int? Id);
         Task<List<Location>> SearchLocationAsync(string userId, int? companyId, string name);

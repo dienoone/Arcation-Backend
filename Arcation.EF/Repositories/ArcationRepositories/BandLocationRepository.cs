@@ -18,6 +18,14 @@ namespace Arcation.EF.Repositories.ArcationRepositories
             _context = context;
         }
 
+        public async Task<List<int>> GetLocationIds(int bandLocationId)
+        {
+            return await _context.BandLocations
+                .Include(e => e.Location).ThenInclude(e => e.BandLocations.Where(e => !e.IsDeleted)).ThenInclude(e => e.Band)
+                .Where(e => e.Id == bandLocationId && !e.IsDeleted).Select(e => e.LocationId).Distinct()
+                .ToListAsync();
+        }
+
         public async Task<List<int>> GetBandsId(int locationId)
         {
             return await _context.BandLocations.Where(e => e.LocationId == locationId && !e.IsDeleted).Select(e => e.BandId).ToListAsync();
@@ -45,7 +53,7 @@ namespace Arcation.EF.Repositories.ArcationRepositories
         public int NumberOfBandCompany(int? companyId, string busienssId)
         {
             return _context.BandLocations
-                .Where(e => e.Location.CompanyId == companyId && !e.IsDeleted && e.BusinessId == busienssId)
+                .Where(e => e.Location.CompanyId == companyId && !e.IsDeleted && e.BusinessId == busienssId).Distinct()
                 .Count();
         }
     }

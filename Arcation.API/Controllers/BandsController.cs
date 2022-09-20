@@ -65,24 +65,19 @@ namespace Arcation.API.Controllers
         {
             if (ModelState.IsValid)
             {
-                Band isNameExist = await _unitOfWork.Bands.FindAsync(b => b.BandName == model.BandName && b.BusinessId == HttpContext.GetBusinessId() && !b.IsDeleted);
-                if(isNameExist == null)
-                {
-                    Band band = new();
-                    band.BandName = model.BandName;
-                    band.IsDeleted = false;
-                    band.CreatedAt = DateTime.UtcNow;
-                    band.CreatedBy = HttpContext.GetUserId();
-                    band.BusinessId = HttpContext.GetBusinessId();
+                Band band = new();
+                band.BandName = model.BandName;
+                band.IsDeleted = false;
+                band.CreatedAt = DateTime.UtcNow;
+                band.CreatedBy = HttpContext.GetUserId();
+                band.BusinessId = HttpContext.GetBusinessId();
 
-                    Band result = await _unitOfWork.Bands.AddAsync(band);
-                    if (await _unitOfWork.Complete() && result != null)
-                    {
-                        return CreatedAtRoute("GetBand", new { controller = "Bands", id = result.Id }, _mapper.Map<BandViewModel>(result));
-                    }
-                    return BadRequest();
+                Band result = await _unitOfWork.Bands.AddAsync(band);
+                if (await _unitOfWork.Complete() && result != null)
+                {
+                    return CreatedAtRoute("GetBand", new { controller = "Bands", id = result.Id }, _mapper.Map<BandViewModel>(result));
                 }
-                return BadRequest("هذا الاسم موجود بالفعل");
+                return BadRequest();
             }
             return BadRequest(ModelState);
         }
@@ -95,21 +90,16 @@ namespace Arcation.API.Controllers
             {
                 if (id != null)
                 {
-                    Band isNameExist = await _unitOfWork.Bands.FindAsync(b => b.BandName == model.BandName);
-                    if(isNameExist == null)
+                    Band queryBand = await _unitOfWork.Bands.FindAsync(c => c.Id == id);
+                    if (queryBand != null)
                     {
-                        Band queryBand = await _unitOfWork.Bands.FindAsync(c => c.Id == id);
-                        if (queryBand != null)
-                        {
-                            queryBand.BandName = model.BandName;
-                            _unitOfWork.Bands.Update(queryBand);
-                            await _unitOfWork.Complete();
-                            return Ok(_mapper.Map<BandViewModel>(queryBand));
+                        queryBand.BandName = model.BandName;
+                        _unitOfWork.Bands.Update(queryBand);
+                        await _unitOfWork.Complete();
+                        return Ok(_mapper.Map<BandViewModel>(queryBand));
 
-                        }
-                        return NotFound();
                     }
-                    return BadRequest("هذا الاسم موجود بالفعل");
+                    return NotFound();
                 }
                 return NotFound();
             }
@@ -130,7 +120,7 @@ namespace Arcation.API.Controllers
                         queryBand.IsDeleted = true;
                         _unitOfWork.Bands.Update(queryBand);
                         await _unitOfWork.Complete();
-                        return new NoContentResult();
+                        return NoContent();
                     }
                     return NotFound();
                 }

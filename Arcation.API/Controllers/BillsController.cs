@@ -74,53 +74,25 @@ namespace Arcation.API.Controllers
         {
             if (ModelState.IsValid)
             {
-                Bill IsExist = await _unitOfWork.Bills.FindAsync(e => e.BusinessId == HttpContext.GetBusinessId() && e.BillCode == dto.BillCode && e.BandLocationId == dto.BandLocationId && !e.IsDeleted);
-                if (IsExist == null)
+                Bill newBill = new Bill
                 {
+                    BillCode = dto.BillCode,
+                    BillDate = dto.BillDate,
+                    BillNote = dto.BillNote,
+                    BillPrice = dto.BillPrice,
+                    BandLocationId = dto.BandLocationId,
+                    IsDeleted = false,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = HttpContext.GetUserId(),
+                    BusinessId = HttpContext.GetBusinessId()
+                };
 
-                    Bill newBill = new Bill 
-                    { 
-                        BillCode = dto.BillCode,
-                        BillDate = dto.BillDate,
-                        BillNote = dto.BillNote,
-                        BillPrice = dto.BillPrice,
-                        BandLocationId = dto.BandLocationId,
-                        IsDeleted = false,
-                        CreatedAt = DateTime.UtcNow,
-                        CreatedBy = HttpContext.GetUserId(),
-                        BusinessId = HttpContext.GetBusinessId()
-                    };
-
-                    //// ----- This Part Related To Photos ---------
-                    //string photo = "photo";
-                    //if (dto.BillPhoto != null)
-                    //{
-                    //    if (dto.BillPhoto.Length > 0)
-                    //    {
-                    //        photo = await _imageHandler.UploadImage(dto.BillPhoto);
-                    //        if (photo == "Invalid image file") return BadRequest();
-                    //    }
-                    //}
-
-                    //if (photo != "photo")
-                    //{
-                    //    newBill.BillPhoto = _appURL.AppUrl + photo;
-                    //}
-                    //else
-                    //{
-                    //    newBill.BillPhoto = null;
-                    //}
-                    //// --------------- End Region ----------------
-
-                    await _unitOfWork.Bills.AddAsync(newBill);
-                    if(await _unitOfWork.Complete())
-                    {
-                        return CreatedAtRoute("GetBill", new { controller = "Bills", id = newBill.BillId, bandLocationId = newBill.BandLocationId }, _mapper.Map<BillDto>(newBill));
-                    }
-                    return BadRequest("Error");
-                    
+                await _unitOfWork.Bills.AddAsync(newBill);
+                if (await _unitOfWork.Complete())
+                {
+                    return CreatedAtRoute("GetBill", new { controller = "Bills", id = newBill.BillId, bandLocationId = newBill.BandLocationId }, _mapper.Map<BillDto>(newBill));
                 }
-                return BadRequest("هذا الاسم موجود بالفعل");
+                return BadRequest("Error");
 
             }
             return BadRequest(ModelState);
@@ -137,40 +109,12 @@ namespace Arcation.API.Controllers
                     Bill queryBill = await _unitOfWork.Bills.FindAsync(b => b.BillId == id && b.BusinessId == HttpContext.GetBusinessId() && !b.IsDeleted);
                     if (queryBill != null)
                     {
-
                         queryBill.BillCode = dto.BillCode;
                         queryBill.BillDate = dto.BillDate;
                         queryBill.BillNote = dto.BillNote;
                         queryBill.BillPrice = dto.BillPrice;
-
-                        //// ----- This Part Related To Photos ---------
-                        //string photo = "photo";
-                        //if (dto.BillPhoto != null)
-                        //{
-                        //    if (dto.BillPhoto.Length > 0)
-                        //    {
-                        //        photo = await _imageHandler.UploadImage(dto.BillPhoto);
-                        //        if (photo == "Invalid image file") return BadRequest();
-                        //    }
-                        //}
-
-                        //if (photo != "photo")
-                        //{
-                        //    queryBill.BillPhoto = _appURL.AppUrl + photo;
-                        //}
-                        //else
-                        //{
-                        //    queryBill.BillPhoto = null;
-                        //}
-                        //// --------------- End Region ----------------
-
-                        if (await _unitOfWork.Complete())
-                        {
-                            return Ok(_mapper.Map<BillDto>(queryBill));
-                        }
-
-                        return BadRequest();
-                        
+                        await _unitOfWork.Complete();
+                        return Ok(_mapper.Map<BillDto>(queryBill));                       
                     }
                     return NotFound();
                 }
@@ -189,15 +133,11 @@ namespace Arcation.API.Controllers
                 {
                     Bill queryBill = await _unitOfWork.Bills.FindAsync(b => b.BillId == id);
                     if (queryBill != null)
-                    {
-                        
+                    {                        
                         queryBill.IsDeleted = true;
-                        if(await _unitOfWork.Complete())
-                        {
-                            return new NoContentResult();
-                        }
-                        return BadRequest();
-                        
+                        await _unitOfWork.Complete();
+                        return NoContent();
+                                               
                     }
                     return NotFound();
                 }

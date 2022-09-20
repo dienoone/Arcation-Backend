@@ -82,27 +82,6 @@ namespace Arcation.API.Controllers
                         CreatedAt = DateTime.UtcNow
                     };
 
-                    // ----- This Part Related To Photos ---------
-                    string photo = "photo";
-                    if (model.Photo != null)
-                    {
-                        if (model.Photo.Length > 0)
-                        {
-                            photo = await _imageHandler.UploadImage(model.Photo);
-                            if (photo == "Invalid image file") return BadRequest();
-                        }
-                    }
-
-                    if (photo != "photo")
-                    {
-                        newCompany.Photo = _appURL.AppUrl + photo;
-                    }
-                    else
-                    {
-                        newCompany.Photo = null;
-                    }
-                    // --------------- End Region ----------------
-
                     await _unitOfWork.Companies.AddAsync(newCompany);
 
                     if(await _unitOfWork.Complete())
@@ -130,34 +109,8 @@ namespace Arcation.API.Controllers
                     if (queryCompany != null)
                     {
                         queryCompany.Name = model.Name;
-                        // ----- This Part Related To Photos ---------
-                        string photo = "photo";
-                        if (model.Photo != null)
-                        {
-                            if (model.Photo.Length > 0)
-                            {
-                                photo = await _imageHandler.UploadImage(model.Photo);
-                                if (photo == "Invalid image file") return BadRequest();
-                            }
-                        }
+                        return Ok(_mapper.Map<CompanyViewModel>(queryCompany));
 
-                        if (photo != "photo")
-                        {
-                            queryCompany.Photo = _appURL.AppUrl + photo;
-                        }
-                        else
-                        {
-                            queryCompany.Photo = null;
-                        }
-                        // --------------- End Region ----------------
-
-
-                        if (await _unitOfWork.Complete())
-                        {
-                            return Ok(_mapper.Map<CompanyViewModel>(queryCompany));
-                        }
-                        return BadRequest();
-                       
                     }
                     return NotFound();
                 }
@@ -180,7 +133,7 @@ namespace Arcation.API.Controllers
                         queryCompany.IsDeleted = true;
                         if(await _unitOfWork.Complete())
                         {
-                            return new NoContentResult();
+                            return NoContent();
                         }
                         return BadRequest();
                         

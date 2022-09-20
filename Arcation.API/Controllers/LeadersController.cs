@@ -45,6 +45,31 @@ namespace Arcation.API.Controllers
 
         #region Main:
 
+        // api/leaders 
+        [HttpGet]
+        public async Task<IActionResult> GetAllLeaders()
+        {
+
+            IEnumerable<Leader> entities = await _unitOfWork.Leaders.FindAllAsync(l => !l.IsDeleted && l.BusinessId == HttpContext.GetBusinessId());
+            return Ok(_mapper.Map<IEnumerable<LeadersPageDto>>(entities));
+        }
+
+        // api/leaders/{leaderId}
+        [HttpGet("{leaderId}", Name = "GetLeader")]
+        public async Task<IActionResult> GetSingleLeader([FromRoute] string leaderId)
+        {
+            if (!string.IsNullOrEmpty(leaderId) && !string.IsNullOrWhiteSpace(leaderId))
+            {
+                Leader leader = await _unitOfWork.Leaders.FindAsync(e => e.Id == leaderId);
+                if (leader != null)
+                {
+                    return Ok(_mapper.Map<LeaderInfoDto>(leader));
+                }
+                return NotFound();
+            }
+            return NotFound();
+        }
+
         // api/Leaders => Create Leader And Create user at the same time
         [HttpPost]
         public async Task<IActionResult> CreateLeader([FromBody] AddLeaderDto model)
@@ -166,33 +191,7 @@ namespace Arcation.API.Controllers
             }
             return NotFound();
         }
-
-
-        // api/leaders 
-        [HttpGet]
-        public async Task<IActionResult> GetAllLeaders()
-        {
-
-            IEnumerable<Leader> entities = await _unitOfWork.Leaders.FindAllAsync(l => !l.IsDeleted && l.BusinessId == HttpContext.GetBusinessId());
-            return Ok(_mapper.Map<IEnumerable<LeadersPageDto>>(entities));
-        }
-
-        // api/leaders/{leaderId}
-        [HttpGet("{leaderId}", Name = "GetLeader")]
-        public async Task<IActionResult> GetSingleLeader([FromRoute] string leaderId)
-        {
-            if (!string.IsNullOrEmpty(leaderId) && !string.IsNullOrWhiteSpace(leaderId))
-            {
-                Leader leader = await _unitOfWork.Leaders.FindAsync(e => e.Id == leaderId);
-                if (leader != null)
-                {
-                    return Ok(_mapper.Map<LeaderInfoDto>(leader));
-                }
-                return NotFound();
-            }
-            return NotFound();
-        }
-
+      
         #endregion
 
         #region LeaderDetail:
@@ -203,43 +202,83 @@ namespace Arcation.API.Controllers
         {
             if (!string.IsNullOrEmpty(leaderId) && !string.IsNullOrWhiteSpace(leaderId))
             {
-                Leader queryLeader = await _unitOfWork.Leaders.GetLeaderDetail(leaderId, HttpContext.GetBusinessId());
+                string businessId = HttpContext.GetBusinessId();
+                Leader queryLeader = await _unitOfWork.Leaders.GetLeaderDetail(leaderId, businessId);
                 if (queryLeader != null)
                 {
                     LeaderDetails leaderDetail = new();
 
-                    var locations = await _unitOfWork.Locations.LocaionsWithBandsRelatedToLeader(leaderId, HttpContext.GetBusinessId());
-                    var list = new List<LeaderLocations>();
-                    var locationIds = queryLeader.BandLocationLeaders.Select(e => e.BandLocation.LocationId);
+                    /* var locations = await _unitOfWork.Locations.LocaionsWithBandsRelatedToLeader(leaderId, HttpContext.GetBusinessId());
+                     var list = new List<LeaderLocations>();
+                     var locationIds = queryLeader.BandLocationLeaders.Select(e => e.BandLocation.LocationId);
 
-                    foreach (int LocationId in locationIds)
+                     foreach (int LocationId in locationIds)
+                     {
+                         Location queryLocation = await _unitOfWork.Locations.FindAsync(e => e.Id == LocationId);
+                         var bandIds = queryLeader.BandLocationLeaders.Where(e => e.BandLocation.LocationId == LocationId).Select(e => e.BandLocation.BandId);
+                         List<LeaderLocationBands> leaderLocationBands = new();
+
+                         foreach (int bandId in bandIds)
+                         {
+
+                             Band queryBand = await _unitOfWork.Bands.FindAsync(e => e.Id == bandId);
+                             BandLocationLeader queryBandLocationLeader = queryLeader.BandLocationLeaders.FirstOrDefault(e => e.BandLocation.LocationId == LocationId && e.BandLocation.BandId == bandId);
+                             LeaderLocationBands leaderLocationBands1 = new LeaderLocationBands
+                             {
+                                 BandId = bandId,
+                                 BandName = queryBand.BandName,
+                                 BandLocationLeaderId = queryBandLocationLeader.Id
+                             };
+                             leaderLocationBands.Add(leaderLocationBands1);
+                         }
+
+                         LeaderLocations result = new LeaderLocations
+                         {
+                             LocationName = queryLocation.LocationName,
+                             LocationId = LocationId,
+                             BandLocations = leaderLocationBands
+
+                         };
+                         list.Add(result);
+                     }*/
+                    List<LeaderLocations> Dtos = new();
+
+                    List<int> locationIds = _unitOfWork.BandLocationLeaders.GetLocationIdsForLeader(queryLeader.Id, businessId);
+                    foreach (int locationId in locationIds)
                     {
-                        Location queryLocation = await _unitOfWork.Locations.FindAsync(e => e.Id == LocationId);
-                        var bandIds = queryLeader.BandLocationLeaders.Where(e => e.BandLocation.LocationId == LocationId).Select(e => e.BandLocation.BandId);
-                        List<LeaderLocationBands> leaderLocationBands = new();
-
-                        foreach (int bandId in bandIds)
+                        Location location = await _unitOfWork.Locations.FindAsync(e => e.Id == locationId && !e.IsDeleted);
+                        if (location != null)
                         {
-
-                            Band queryBand = await _unitOfWork.Bands.FindAsync(e => e.Id == bandId);
-                            BandLocationLeader queryBandLocationLeader = queryLeader.BandLocationLeaders.FirstOrDefault(e => e.BandLocation.LocationId == LocationId && e.BandLocation.BandId == bandId);
-                            LeaderLocationBands leaderLocationBands1 = new LeaderLocationBands
+                            BandLocationLeader bandLocationLeader = _unitOfWork.BandLocationLeaders.GetForLeader(queryLeader.Id, locationId);
+                            List<int> bandIds = _unitOfWork.BandLocationLeaders.GetBandIdsForLeaderLocation(locationId, queryLeader.Id);
+                            List<LeaderLocationBands> leaderLocationBands = new List<LeaderLocationBands>();
+                            foreach (int bandId in bandIds)
                             {
-                                BandId = bandId,
-                                BandName = queryBand.BandName,
-                                BandLocationLeaderId = queryBandLocationLeader.Id
-                            };
-                            leaderLocationBands.Add(leaderLocationBands1);
+                                Console.WriteLine(bandId);
+                                Band band = await _unitOfWork.Bands.FindAsync(e => e.Id == bandId && !e.IsDeleted);
+                                if (band != null)
+                                {
+                                    LeaderLocationBands LeaderLocationBand = new LeaderLocationBands
+                                    {
+                                        BandLocationLeaderId = bandLocationLeader.Id,
+                                        BandId = band.Id,
+                                        BandName = band.BandName
+                                    };
+                                    leaderLocationBands.Add(LeaderLocationBand);
+                                }
+                            }
+
+                            if (leaderLocationBands.Count > 0)
+                            {
+                                LeaderLocations leaderLocation = new LeaderLocations
+                                {
+                                    LocationId = locationId,
+                                    LocationName = location.LocationName,
+                                    BandLocations = leaderLocationBands
+                                };
+                                Dtos.Add(leaderLocation);
+                            }
                         }
-
-                        LeaderLocations result = new LeaderLocations
-                        {
-                            LocationName = queryLocation.LocationName,
-                            LocationId = LocationId,
-                            BandLocations = leaderLocationBands
-
-                        };
-                        list.Add(result);
                     }
 
                     LeaderInfoDto leaderInfoDto = _mapper.Map<LeaderInfoDto>(queryLeader);
@@ -249,7 +288,7 @@ namespace Arcation.API.Controllers
 
                     leaderDetail.BusinessDetail = employeeBusinessDetailDto;
                     leaderDetail.LeaderInfo = leaderInfoDto;
-                    leaderDetail.LeaderLocations = list;
+                    leaderDetail.LeaderLocations = Dtos;
 
                     return Ok(leaderDetail);
                 }
@@ -344,16 +383,9 @@ namespace Arcation.API.Controllers
                     }
 
                     double employeeSalary = totalDays * bandLocationLeaderPeriod.LeaderSalary;
-                    double totalPaied = bandLocationLeaderPeriod.TotalPaied + dto.PaiedValue;
-                    double remainder = employeeSalary - totalPaied - borrowValue;
-
-                    if (remainder < 0)
-                    {
-                        return BadRequest();
-                    }
 
                     bandLocationLeaderPeriod.TotalPaied += dto.PaiedValue;
-                    if (bandLocationLeaderPeriod.TotalPaied == employeeSalary)
+                    if (bandLocationLeaderPeriod.TotalPaied >= employeeSalary)
                     {
                         bandLocationLeaderPeriod.State = true;
                     }
